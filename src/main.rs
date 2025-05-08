@@ -51,6 +51,9 @@ impl DancingLinks {
         let mut current_column = unsafe { (*self.root).right };
         let mut previous_node: *mut Node = std::ptr::null_mut();
         for &x in row.iter() {
+            if current_column == self.root {
+                break;
+            }
             if x == 1 {
                 let new_node: Box<Node> = Box::new(Node {
                     row: row_number, // Placeholder for row number
