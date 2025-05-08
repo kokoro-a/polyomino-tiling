@@ -1,5 +1,6 @@
 struct DancingLinks {
     root: *mut ColumnNode,
+    n_rows: isize,
 }
 
 impl DancingLinks {
@@ -16,6 +17,7 @@ impl DancingLinks {
 
         Self {
             root: Box::into_raw(root),
+            n_rows: 0,
         }
     }
 
@@ -44,12 +46,14 @@ impl DancingLinks {
     }
 
     fn add_row(&mut self, row: Vec<isize>) {
+        let row_number: isize = self.n_rows + 1;
+        self.n_rows = row_number;
         let mut current_column = unsafe { (*self.root).right };
         let mut previous_node: *mut Node = std::ptr::null_mut();
         for &x in row.iter() {
             if x == 1 {
                 let new_node: Box<Node> = Box::new(Node {
-                    row: 0, // Placeholder for row number
+                    row: row_number, // Placeholder for row number
                     column: current_column,
                     up: std::ptr::null_mut(),
                     down: std::ptr::null_mut(),
@@ -143,7 +147,7 @@ struct ColumnNode {
 }
 
 struct Node {
-    row: usize,
+    row: isize,
     column: *mut ColumnNode,
     up: *mut Node,
     down: *mut Node,
