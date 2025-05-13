@@ -1,12 +1,17 @@
+use core::panic;
+use std::collections::HashMap;
+
 struct DancingLinks {
     root: *mut ColumnNode,
     n_rows: isize,
+    n_cols: isize,
+    columns: Vec<*mut ColumnNode>,
 }
 
 impl DancingLinks {
     fn new() -> Self {
-        let mut root = Box::new(ColumnNode {
-            name: "root".to_string(),
+        let mut root: Box<ColumnNode> = Box::new(ColumnNode {
+            index: 0,
             size: 0,
             left: std::ptr::null_mut(),
             right: std::ptr::null_mut(),
@@ -18,93 +23,63 @@ impl DancingLinks {
         Self {
             root: Box::into_raw(root),
             n_rows: 0,
+            n_cols: 0,
+            columns: Vec::new(),
         }
     }
 
-    fn add_column(&mut self, name: String) {
-        /*
-        Before add_column:
-            root -- column1 -- ... -- columnN -- root
-
-        After add_column:
-            root -- column1 -- ... -- columnN -- **new_column** --root
-        */
+    fn append_column(&mut self) {
         unsafe {
-            let last_column_before_add = (*self.root).left;
-            let new_column = Box::new(ColumnNode {
-                name,
+            let old_rightmost = (*self.root).left;
+            let new_column: Box<ColumnNode> = Box::new(ColumnNode {
+                index: self.n_cols,
                 size: 0,
-                left: last_column_before_add,
-                right: self.root,
+                left: std::ptr::null_mut(),
+                right: std::ptr::null_mut(),
                 head: std::ptr::null_mut(),
             });
-
-            let new_column_ptr = Box::into_raw(new_column);
-            (*last_column_before_add).right = new_column_ptr;
-            (*self.root).left = new_column_ptr;
+            let new_column_ptr: *mut ColumnNode = Box::into_raw(new_column);
+            (*old_rightmost).insert_right(new_column_ptr);
+            self.n_cols += 1;
+            self.columns.push(new_column_ptr);
         }
     }
 
-    fn add_row(&mut self, row: Vec<isize>) {
-        let row_number: isize = self.n_rows + 1;
-        self.n_rows = row_number;
-        let mut current_column = unsafe { (*self.root).right };
-        let mut previous_node: *mut Node = std::ptr::null_mut();
-        for &x in row.iter() {
-            if current_column == self.root {
-                break;
-            }
-            if x == 1 {
+    fn append_row(&mut self, row: Vec<isize>) {
+        if row.len() != self.n_cols as usize {
+            panic!("Row length does not match number of columns");
+        }
+
+        let row_nodes = row
+            .iter()
+            .enumerate()
+            .filter(|&(_, &val)| val != 0)
+            .map(|(i, _)| {
+                let column = self.columns[i];
                 let new_node: Box<Node> = Box::new(Node {
-                    row: row_number, // Placeholder for row number
-                    column: current_column,
+                    row_index: self.n_rows,
+                    column: column,
                     up: std::ptr::null_mut(),
                     down: std::ptr::null_mut(),
                     left: std::ptr::null_mut(),
                     right: std::ptr::null_mut(),
                 });
                 let new_node_ptr = Box::into_raw(new_node);
-                unsafe {
-                    (*current_column).size += 1;
+                unsafe { (*column).append_node(new_node_ptr) };
+                new_node_ptr
+            })
+            .collect::<Vec<_>>();
 
-                    /* link vertical */
-                    let head_node = (*current_column).head;
-                    if head_node.is_null() {
-                        (*current_column).head = new_node_ptr;
-                        (*new_node_ptr).up = new_node_ptr;
-                        (*new_node_ptr).down = new_node_ptr;
-                    } else {
-                        let last_node_before_add = (*head_node).up;
-                        (*last_node_before_add).down = new_node_ptr;
-                        (*new_node_ptr).up = last_node_before_add;
-                        (*new_node_ptr).down = head_node;
-                        (*head_node).up = new_node_ptr;
-                    }
-
-                    /* link horizontal */
-                    (*new_node_ptr).left = previous_node;
-                    if !previous_node.is_null() {
-                        (*new_node_ptr).left = previous_node;
-                        (*previous_node).right = new_node_ptr;
-                    }
-                }
-                previous_node = new_node_ptr;
-            }
-            current_column = unsafe { (*current_column).right };
-        }
-        let rightmost_node = previous_node;
-        let leftmost_node = {
-            let mut current_node = rightmost_node;
+        // Link the nodes in the row
+        if row_nodes.len() > 0 {
+            let first_node = row_nodes[0];
             unsafe {
-                while !(*current_node).left.is_null() {
-                    current_node = (*current_node).left;
-                }
+                (*first_node).left = first_node;
+                (*first_node).right = first_node;
             }
-            current_node
-        };
-        unsafe {
-            (*leftmost_node).left = rightmost_node;
-            (*rightmost_node).right = leftmost_node;
+            row_nodes.iter().skip(1).for_each(|&node| unsafe {
+                (*first_node).insert_left(node);
+            });
         }
     }
 
@@ -131,7 +106,7 @@ impl Drop for DancingLinks {
             let mut current = (*self.root).right;
             while current != self.root {
                 let next = (*current).right;
-                println!("Dropping column: {}", (*current).name);
+                println!("Dropping column: {}", (*current).index);
                 self.drop_column(current);
                 current = next;
             }
@@ -142,15 +117,50 @@ impl Drop for DancingLinks {
 }
 
 struct ColumnNode {
-    name: String,
+    index: isize,
     size: usize,
     left: *mut ColumnNode,
     right: *mut ColumnNode,
     head: *mut Node,
 }
 
+impl ColumnNode {
+    fn insert_right(&mut self, new_column: *mut ColumnNode) {
+        unsafe {
+            if new_column.is_null() {
+                panic!("New column is null");
+            }
+            let old_right = (*self).right;
+            if old_right.is_null() {
+                panic!("Right column is null");
+            }
+            (*self).right = new_column;
+            (*new_column).left = self;
+            (*new_column).right = old_right;
+            (*old_right).left = new_column;
+        }
+    }
+
+    fn append_node(&mut self, new_node: *mut Node) {
+        unsafe {
+            if (*self).head.is_null() {
+                (*self).head = new_node;
+                (*new_node).up = new_node;
+                (*new_node).down = new_node;
+            } else {
+                let head = (*self).head;
+                if head.is_null() {
+                    panic!("Head is null");
+                }
+                (*head).insert_up(new_node);
+            }
+            (*self).size += 1;
+        }
+    }
+}
+
 struct Node {
-    row: isize,
+    row_index: isize,
     column: *mut ColumnNode,
     up: *mut Node,
     down: *mut Node,
@@ -158,19 +168,65 @@ struct Node {
     right: *mut Node,
 }
 
+impl Node {
+    fn insert_down(&mut self, new_node: *mut Node) {
+        unsafe {
+            if new_node.is_null() {
+                panic!("New node is null");
+            }
+            let old_down = (*self).down;
+            if old_down.is_null() {
+                panic!("Down node is null");
+            }
+            (*self).down = new_node;
+            (*new_node).up = self;
+            (*new_node).down = old_down;
+            (*old_down).up = new_node;
+        }
+    }
+
+    fn insert_right(&mut self, new_node: *mut Node) {
+        unsafe {
+            if new_node.is_null() {
+                panic!("New node is null");
+            }
+            let old_right = (*self).right;
+            if old_right.is_null() {
+                panic!("Right node is null");
+            }
+            (*self).right = new_node;
+            (*new_node).left = self;
+            (*new_node).right = old_right;
+            (*old_right).left = new_node;
+        }
+    }
+
+    fn insert_up(&mut self, new_node: *mut Node) {
+        unsafe {
+            (*self.up).insert_down(new_node);
+        }
+    }
+
+    fn insert_left(&mut self, new_node: *mut Node) {
+        unsafe {
+            (*self.left).insert_right(new_node);
+        }
+    }
+}
+
 fn main() {
     let mut dlx = DancingLinks::new();
-    dlx.add_column("Column 1".to_string());
-    dlx.add_column("Column 2".to_string());
-    dlx.add_row(vec![1, 0]);
-    dlx.add_row(vec![0, 1]);
+    dlx.append_column();
+    dlx.append_column();
+    dlx.append_row(vec![1, 0]);
+    dlx.append_row(vec![0, 1]);
     // Example usage of the Dancing Links algorithm
     // Add columns and rows to the dlx structure
     // Perform search and cover/uncover operations
     // Print results
     unsafe {
-        println!("{:?}", (*dlx.root).name);
-        println!("{:?}", (*(*dlx.root).right).name);
-        println!("{:?}", (*(*dlx.root).left).name);
+        println!("{:?}", (*dlx.root).index);
+        println!("{:?}", (*(*dlx.root).right).index);
+        println!("{:?}", (*(*dlx.root).left).index);
     }
 }
