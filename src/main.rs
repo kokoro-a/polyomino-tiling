@@ -1,5 +1,5 @@
 use core::panic;
-use std::collections::HashMap;
+use std::iter;
 
 struct DancingLinks {
     root: *mut ColumnNode,
@@ -25,6 +25,42 @@ impl DancingLinks {
             n_rows: 0,
             n_cols: 0,
             columns: Vec::new(),
+        }
+    }
+
+    fn solve(&mut self, solution: Vec<usize>) -> Result<Vec<usize>, String> {
+        let column_minimum = self
+            .columns
+            .iter()
+            .copied()
+            .min_by_key(|&col| unsafe { (*col).size });
+
+        match column_minimum {
+            Some(column) => unsafe {
+                (*column).cover();
+                let mut current = (*column).head;
+                while current != column {
+                    let row_index = (*current).row_index;
+                    let mut node = current;
+                    while node != column {
+                        let col = (*node).column;
+                        (*col).cover();
+                        node = (*node).right;
+                    }
+                    self.solve();
+                    // Uncover the columns and rows
+                    node = current;
+                    while node != column {
+                        let col = (*node).column;
+                        (*col).uncover();
+                        node = (*node).right;
+                    }
+                }
+                (*column).uncover();
+            },
+            None => {
+                return Ok(solution);
+            }
         }
     }
 
@@ -156,6 +192,36 @@ impl ColumnNode {
             }
             (*self).size += 1;
         }
+    }
+
+    fn iterate_column(&self) -> impl Iterator<Item = *mut Node> {
+        unsafe {
+            let mut current = (*self).head;
+            iter::from_fn(move || {
+                if current.is_null() {
+                    None
+                } else {
+                    let node = current;
+                    current = (*current).down;
+                    Some(node)
+                }
+            })
+        }
+    }
+
+    fn cover(&mut self) {
+        let left = (*self).left;
+        let right = (*self).right;
+        unsafe {
+            (*left).right = right;
+            (*right).left = left;
+        }
+        self.iterate_column().for_each(|node| unsafe {
+            let left = (*node).left;
+            let right = (*node).right;
+            (*left).right = right;
+            (*right).left = left;
+        });
     }
 }
 
