@@ -36,10 +36,11 @@ impl DancingLinks {
                 let mut current = (*node).right;
                 iter::from_fn(move || {
                     if current == node {
-                        None
+                        return None;
                     } else {
                         let next = (*current).right;
-                        Some(current)
+                        return Some(current);
+                        current = next;
                     }
                 })
                 .for_each(|node| unsafe { (*node).unlink_vertically() });
