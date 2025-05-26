@@ -23,29 +23,82 @@ impl DancingLinks {
     }
 
     fn solve(&mut self, solution: Vec<usize>) -> Option<Vec<usize>> {
-        let columns_sorted = {
-            let cs = self.columns.clone();
-            cs.sort_by_key(|&col| unsafe { (*col).size });
-            cs
+        // uncovered columns
+        let columns = {
+            let mut c = self.iterate_columns().collect::<Vec<_>>();
+            c.sort_by_key(|&col| unsafe { (*col).size });
+            c
         };
-        columns_sorted.iter().for_each(|&col| unsafe {
-            // Cover the column
-            (*col).cover();
-            (*col).iterate_column().for_each(|node| {
-                let solution_candidate = (*node).row_index;
-                let mut current = (*node).right;
-                iter::from_fn(move || {
-                    if current == node {
-                        return None;
-                    } else {
-                        let next = (*current).right;
-                        return Some(current);
-                        current = next;
+
+        // if there are no uncovered columns, we have a solution
+        if columns.is_empty() {
+            return Some(solution);
+        }
+
+        let c = columns[0];
+
+        // if there exists a uncovered column with size 0, it means no solution
+        if unsafe { (*c).size } == 0 {
+            return None;
+        }
+
+        unsafe {
+            (*c).cover();
+        }
+        
+        // Get snapshot of nodes before cover operations might affect them
+        let nodes_in_column: Vec<*mut Node> = {
+            let mut nodes = Vec::new();
+            if unsafe { !(*c).head.is_null() } {
+                let head = unsafe { (*c).head };
+                let mut current = head;
+                loop {
+                    nodes.push(current);
+                    current = unsafe { (*current).down };
+                    if current == head {
+                        break;
                     }
-                })
-                .for_each(|node| unsafe { (*node).unlink_vertically() });
-            })
-        });
+                }
+            }
+            nodes
+        };
+        
+        for node_in_column in nodes_in_column {
+            let solution_candidate = unsafe { (*node_in_column).row_index };
+
+            // Cover all other columns in this row
+            let mut covered_columns = Vec::new();
+            let mut node_in_row = unsafe { (*node_in_column).right };
+            while node_in_row != node_in_column {
+                unsafe {
+                    let col = (*node_in_row).column;
+                    (*col).cover();
+                    covered_columns.push(col);
+                    node_in_row = (*node_in_row).right;
+                }
+            }
+            
+            if let Some(s) = self.solve({
+                let mut s = solution.clone();
+                s.push(solution_candidate);
+                s
+            }) {
+                return Some(s);
+            }
+            
+            // Backtrack: uncover columns in reverse order
+            for &col in covered_columns.iter().rev() {
+                unsafe {
+                    (*col).uncover();
+                }
+            }
+        }
+        
+        unsafe {
+            (*c).uncover();
+        }
+        
+        None
     }
 
     fn append_column(&mut self) {
@@ -88,6 +141,8 @@ impl DancingLinks {
                 (*first_node).insert_left(node);
             });
         }
+        
+        self.n_rows += 1;
     }
 
     fn drop_column(&mut self, column: *mut ColumnNode) {
@@ -103,6 +158,21 @@ impl DancingLinks {
                 drop(Box::from_raw(head));
             }
             drop(Box::from_raw(column));
+        }
+    }
+
+    fn iterate_columns(&self) -> impl Iterator<Item = *mut ColumnNode> {
+        unsafe {
+            let mut current = (*self.root).right;
+            iter::from_fn(move || {
+                if current == self.root {
+                    None
+                } else {
+                    let column = current;
+                    current = (*current).right;
+                    Some(column)
+                }
+            })
         }
     }
 }
@@ -175,15 +245,18 @@ impl ColumnNode {
         }
     }
 
-    fn iterate_column(&self) -> impl Iterator<Item = *mut Node> {
+    fn iterate_nodes_in_column(&self) -> impl Iterator<Item = *mut Node> {
         unsafe {
-            let mut current = (*self).head;
+            let head = (*self).head;
+            let mut current = head;
+            let mut first = true;
             iter::from_fn(move || {
-                if current.is_null() {
+                if current.is_null() || (!first && current == head) {
                     None
                 } else {
                     let node = current;
                     current = (*current).down;
+                    first = false;
                     Some(node)
                 }
             })
@@ -192,19 +265,16 @@ impl ColumnNode {
 
     fn cover(&mut self) {
         self.unlink();
-        self.iterate_column().for_each(|node| unsafe {
-            (*node).unlink_horizontally();
-
-            let mut current = node;
-            iter::from_fn(move || {
-                current = (*current).left;
-                if current == node { None } else { Some(current) }
-            })
-            .for_each(|node| {
-                (*node).unlink_vertically();
-                (*(*node).column).size -= 1;
-            });
-        });
+        let nodes: Vec<*mut Node> = self.iterate_nodes_in_column().collect();
+        for node in nodes {
+            unsafe {
+                let mut current = (*node).right;
+                while current != node {
+                    (*current).unlink_vertically();
+                    current = (*current).right;
+                }
+            }
+        }
     }
 
     fn unlink(&mut self) {
@@ -223,6 +293,20 @@ impl ColumnNode {
             (*right).left = self;
             (*left).right = self;
         }
+    }
+
+    fn uncover(&mut self) {
+        let nodes: Vec<*mut Node> = self.iterate_nodes_in_column().collect();
+        for node in nodes.iter().rev() {
+            unsafe {
+                let mut current = (**node).left;
+                while current != *node {
+                    (*current).relink_vertically();
+                    current = (*current).left;
+                }
+            }
+        }
+        self.relink();
     }
 }
 
@@ -330,18 +414,28 @@ impl Node {
 }
 
 fn main() {
+    // Test 1: Simple case
     let mut dlx = DancingLinks::new();
     dlx.append_column();
     dlx.append_column();
     dlx.append_row(vec![1, 0]);
     dlx.append_row(vec![0, 1]);
-    // Example usage of the Dancing Links algorithm
-    // Add columns and rows to the dlx structure
-    // Perform search and cover/uncover operations
-    // Print results
-    unsafe {
-        println!("{:?}", (*dlx.root).index);
-        println!("{:?}", (*(*dlx.root).right).index);
-        println!("{:?}", (*(*dlx.root).left).index);
+    
+    println!("Test 1 - Simple case:");
+    match dlx.solve(vec![]) {
+        Some(solution) => println!("Solution: {:?}", solution),
+        None => println!("No solution"),
+    }
+    
+    // Test 2: Another simple case
+    let mut dlx2 = DancingLinks::new();
+    dlx2.append_column();
+    dlx2.append_column(); 
+    dlx2.append_row(vec![1, 1]);
+    
+    println!("Test 2 - Single row covers all:");
+    match dlx2.solve(vec![]) {
+        Some(solution) => println!("Solution: {:?}", solution),
+        None => println!("No solution"),
     }
 }
