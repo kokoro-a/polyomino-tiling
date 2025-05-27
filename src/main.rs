@@ -37,7 +37,7 @@ impl DancingLinks {
             let mut best_column = (*self.root).right;
             let mut min_size = (*best_column).size;
             let mut current = (*best_column).right;
-            
+
             while current != self.root {
                 if (*current).size < min_size {
                     min_size = (*current).size;
@@ -174,13 +174,13 @@ impl DancingLinks {
 
     fn to_vec(&self) -> Vec<Vec<isize>> {
         let mut matrix = vec![vec![0; self.n_cols]; self.n_rows];
-        
+
         unsafe {
             // Iterate through each column
             let mut current_col = (*self.root).right;
             while current_col != self.root {
                 let col_index = (*current_col).index;
-                
+
                 // Iterate through all nodes in this column
                 let head = (*current_col).head;
                 if !head.is_null() {
@@ -188,18 +188,18 @@ impl DancingLinks {
                     loop {
                         let row_index = (*current_node).row_index;
                         matrix[row_index][col_index] = 1;
-                        
+
                         current_node = (*current_node).down;
                         if current_node == head {
                             break;
                         }
                     }
                 }
-                
+
                 current_col = (*current_col).right;
             }
         }
-        
+
         matrix
     }
 }
@@ -297,7 +297,7 @@ impl ColumnNode {
         unsafe {
             // 1. Unlink the column node from the neighboring columns
             self.unlink();
-            
+
             // 2. For each node in this column
             let mut current = (*self).head;
             if !current.is_null() {
@@ -339,7 +339,7 @@ impl ColumnNode {
                     current = (*current).up;
                 }
             }
-            
+
             // Relink the column node to neighboring columns
             self.relink();
         }
@@ -472,7 +472,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_dancing_links() {
+    fn test_dancing_links_simple() {
         let mut dlx = DancingLinks::new();
         dlx.append_column();
         dlx.append_column();
@@ -482,6 +482,64 @@ mod tests {
         assert_eq!(dlx.n_cols, 2);
         assert_eq!(dlx.to_vec(), vec![vec![1, 0], vec![0, 1]]);
         assert_eq!(dlx.solve(), Some(vec![0, 1]));
+    }
+
+    #[test]
+    fn test_dancing_links_complex() {
+        // Matrix:
+        // [1, 0, 0, 1, 0, 0, 1]  <- row 0
+        // [1, 0, 0, 1, 0, 0, 0]  <- row 1
+        // [0, 0, 0, 1, 1, 0, 1]  <- row 2
+        // [0, 0, 1, 0, 1, 1, 0]  <- row 3
+        // [0, 1, 1, 0, 0, 1, 1]  <- row 4
+        // [0, 1, 0, 0, 0, 0, 1]  <- row 5
+        // Solution should be rows [1, 3, 4] covering all 7 columns exactly once
+        let mut dlx = DancingLinks::new();
+        for _ in 0..7 {
+            dlx.append_column();
+        }
+        dlx.append_row(vec![1, 0, 0, 1, 0, 0, 1]);
+        dlx.append_row(vec![1, 0, 0, 1, 0, 0, 0]); // solution
+        dlx.append_row(vec![0, 0, 0, 1, 1, 0, 1]);
+        dlx.append_row(vec![0, 0, 1, 0, 1, 1, 0]); // solution
+        dlx.append_row(vec![0, 1, 0, 0, 0, 1, 1]); // solution
+        dlx.append_row(vec![0, 1, 0, 0, 0, 0, 1]);
+
+        assert_eq!(dlx.n_rows, 6);
+        assert_eq!(dlx.n_cols, 7);
+
+        let solution = dlx.solve();
+        assert!(solution.is_some());
+        let mut sol = solution.unwrap();
+        sol.sort(); // Sort for consistent comparison
+        assert_eq!(sol, vec![1, 3, 4]);
+    }
+
+    #[test]
+    fn test_dancing_links_no_solution() {
+        // Matrix with no exact cover:
+        // [1, 0]  <- row 0
+        // [1, 0]  <- row 1 (duplicate, can't cover column 1)
+        let mut dlx = DancingLinks::new();
+        dlx.append_column();
+        dlx.append_column();
+        dlx.append_row(vec![1, 0]);
+        dlx.append_row(vec![1, 0]);
+
+        assert_eq!(dlx.solve(), None);
+    }
+
+    #[test]
+    fn test_dancing_links_single_row() {
+        // Matrix with single row covering all columns:
+        // [1, 1, 1]  <- row 0
+        let mut dlx = DancingLinks::new();
+        for _ in 0..3 {
+            dlx.append_column();
+        }
+        dlx.append_row(vec![1, 1, 1]);
+
+        assert_eq!(dlx.solve(), Some(vec![0]));
     }
 }
 fn main() {}
