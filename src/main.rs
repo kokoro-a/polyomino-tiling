@@ -1,4 +1,5 @@
 use core::panic;
+use log::{debug, error, info, warn};
 use std::iter;
 
 struct DancingLinks {
@@ -6,6 +7,7 @@ struct DancingLinks {
     n_rows: usize,
     n_cols: usize,
     columns: Vec<*mut ColumnNode>,
+    nodes: Vec<*mut Node>,
 }
 
 impl DancingLinks {
@@ -19,6 +21,7 @@ impl DancingLinks {
             n_rows: 0,
             n_cols: 0,
             columns: Vec::new(),
+            nodes: Vec::new(),
         }
     }
 
@@ -142,16 +145,24 @@ impl DancingLinks {
     }
 
     fn drop_column(&mut self, column: *mut ColumnNode) {
+        debug!("Dropping column {}", unsafe { (*column).index });
         unsafe {
             if !(*column).head.is_null() {
                 let head = (*column).head;
                 let mut current = (*head).down;
                 while current != head {
                     let next = (*current).down;
+                    debug!(
+                        "Dropping node at row {}, column {}",
+                        (*current).row_index,
+                        (*column).index
+                    );
                     drop(Box::from_raw(current));
                     current = next;
                 }
                 drop(Box::from_raw(head));
+            } else {
+                debug!("Column {} has no nodes", (*column).index);
             }
             drop(Box::from_raw(column));
         }
@@ -206,15 +217,16 @@ impl DancingLinks {
 
 impl Drop for DancingLinks {
     fn drop(&mut self) {
+        debug!("Dropping DancingLinks");
         unsafe {
             let mut current = (*self.root).right;
             while current != self.root {
                 let next = (*current).right;
-                println!("Dropping column: {}", (*current).index);
+                debug!("Dropping column {}", (*current).index);
                 self.drop_column(current);
                 current = next;
             }
-            println!("Dropping root");
+            debug!("Dropping root");
             drop(Box::from_raw(self.root));
         }
     }
@@ -473,6 +485,7 @@ mod tests {
 
     #[test]
     fn test_dancing_links_simple() {
+        env_logger::init();
         let mut dlx = DancingLinks::new();
         dlx.append_column();
         dlx.append_column();
@@ -494,6 +507,7 @@ mod tests {
         // [0, 1, 1, 0, 0, 1, 1]  <- row 4
         // [0, 1, 0, 0, 0, 0, 1]  <- row 5
         // Solution should be rows [1, 3, 4] covering all 7 columns exactly once
+        env_logger::init();
         let mut dlx = DancingLinks::new();
         for _ in 0..7 {
             dlx.append_column();
@@ -520,6 +534,7 @@ mod tests {
         // Matrix with no exact cover:
         // [1, 0]  <- row 0
         // [1, 0]  <- row 1 (duplicate, can't cover column 1)
+        env_logger::init();
         let mut dlx = DancingLinks::new();
         dlx.append_column();
         dlx.append_column();
@@ -533,6 +548,7 @@ mod tests {
     fn test_dancing_links_single_row() {
         // Matrix with single row covering all columns:
         // [1, 1, 1]  <- row 0
+        env_logger::init();
         let mut dlx = DancingLinks::new();
         for _ in 0..3 {
             dlx.append_column();
