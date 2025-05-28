@@ -141,32 +141,12 @@ impl DancingLinks {
             });
         }
 
+        // Push the row nodes to the main list
+        self.nodes.extend(row_nodes);
+
         self.n_rows += 1;
     }
 
-    fn drop_column(&mut self, column: *mut ColumnNode) {
-        debug!("Dropping column {}", unsafe { (*column).index });
-        unsafe {
-            if !(*column).head.is_null() {
-                let head = (*column).head;
-                let mut current = (*head).down;
-                while current != head {
-                    let next = (*current).down;
-                    debug!(
-                        "Dropping node at row {}, column {}",
-                        (*current).row_index,
-                        (*column).index
-                    );
-                    drop(Box::from_raw(current));
-                    current = next;
-                }
-                drop(Box::from_raw(head));
-            } else {
-                debug!("Column {} has no nodes", (*column).index);
-            }
-            drop(Box::from_raw(column));
-        }
-    }
 
     fn iterate_columns(&self) -> impl Iterator<Item = *mut ColumnNode> {
         unsafe {
@@ -217,16 +197,29 @@ impl DancingLinks {
 
 impl Drop for DancingLinks {
     fn drop(&mut self) {
-        debug!("Dropping DancingLinks");
-        unsafe {
-            let mut current = (*self.root).right;
-            while current != self.root {
-                let next = (*current).right;
-                debug!("Dropping column {}", (*current).index);
-                self.drop_column(current);
-                current = next;
+        debug!("Dropping DancingLinks using vectors");
+        
+        // Drop all nodes using the vector (avoid traversing corrupted linked lists)
+        debug!("Dropping {} nodes", self.nodes.len());
+        for &node in &self.nodes {
+            unsafe {
+                debug!("Dropping node at row {}", (*node).row_index);
+                drop(Box::from_raw(node));
             }
-            debug!("Dropping root");
+        }
+        
+        // Drop all columns using the vector
+        debug!("Dropping {} columns", self.columns.len());
+        for &column in &self.columns {
+            unsafe {
+                debug!("Dropping column {}", (*column).index);
+                drop(Box::from_raw(column));
+            }
+        }
+        
+        // Drop root
+        debug!("Dropping root");
+        unsafe {
             drop(Box::from_raw(self.root));
         }
     }
@@ -444,9 +437,15 @@ impl Node {
         unsafe {
             let up = (*self).up;
             let down = (*self).down;
+            let column = (*self).column;
+            debug!("Unlinking node row {} from column {} (size before: {})", 
+                   (*self).row_index, (*column).index, (*column).size);
             (*up).down = down;
             (*down).up = up;
-            (*(*self).column).size -= 1;
+            if (*column).size == 0 {
+                panic!("Attempting to unlink from empty column {}", (*column).index);
+            }
+            (*column).size -= 1;
         }
     }
 
@@ -485,7 +484,7 @@ mod tests {
 
     #[test]
     fn test_dancing_links_simple() {
-        env_logger::init();
+        let _ = env_logger::try_init();
         let mut dlx = DancingLinks::new();
         dlx.append_column();
         dlx.append_column();
@@ -507,7 +506,7 @@ mod tests {
         // [0, 1, 1, 0, 0, 1, 1]  <- row 4
         // [0, 1, 0, 0, 0, 0, 1]  <- row 5
         // Solution should be rows [1, 3, 4] covering all 7 columns exactly once
-        env_logger::init();
+        let _ = env_logger::try_init();
         let mut dlx = DancingLinks::new();
         for _ in 0..7 {
             dlx.append_column();
@@ -534,7 +533,7 @@ mod tests {
         // Matrix with no exact cover:
         // [1, 0]  <- row 0
         // [1, 0]  <- row 1 (duplicate, can't cover column 1)
-        env_logger::init();
+        let _ = env_logger::try_init();
         let mut dlx = DancingLinks::new();
         dlx.append_column();
         dlx.append_column();
@@ -548,7 +547,7 @@ mod tests {
     fn test_dancing_links_single_row() {
         // Matrix with single row covering all columns:
         // [1, 1, 1]  <- row 0
-        env_logger::init();
+        let _ = env_logger::try_init();
         let mut dlx = DancingLinks::new();
         for _ in 0..3 {
             dlx.append_column();
