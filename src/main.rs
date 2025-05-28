@@ -1,5 +1,5 @@
 use core::panic;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use std::iter;
 
 struct DancingLinks {
@@ -147,7 +147,6 @@ impl DancingLinks {
         self.n_rows += 1;
     }
 
-
     fn iterate_columns(&self) -> impl Iterator<Item = *mut ColumnNode> {
         unsafe {
             let mut current = (*self.root).right;
@@ -198,7 +197,7 @@ impl DancingLinks {
 impl Drop for DancingLinks {
     fn drop(&mut self) {
         debug!("Dropping DancingLinks using vectors");
-        
+
         // Drop all nodes using the vector (avoid traversing corrupted linked lists)
         debug!("Dropping {} nodes", self.nodes.len());
         for &node in &self.nodes {
@@ -207,7 +206,7 @@ impl Drop for DancingLinks {
                 drop(Box::from_raw(node));
             }
         }
-        
+
         // Drop all columns using the vector
         debug!("Dropping {} columns", self.columns.len());
         for &column in &self.columns {
@@ -216,7 +215,7 @@ impl Drop for DancingLinks {
                 drop(Box::from_raw(column));
             }
         }
-        
+
         // Drop root
         debug!("Dropping root");
         unsafe {
@@ -306,19 +305,31 @@ impl ColumnNode {
             // 2. For each node in this column
             let mut current = (*self).head;
             if !current.is_null() {
+                debug!(
+                    "head is not null, starting to cover column {}",
+                    (*self).index
+                );
                 loop {
                     // 3. For each node in the same row as current
+                    debug!("unlinking row {}", (*current).row_index);
                     let mut row_node = (*current).right;
                     while row_node != current {
                         // Unlink the node vertically from its column
+                        debug!("unlinking node vertically: {:?}", (*row_node).get_loc());
                         (*row_node).unlink_vertically();
                         row_node = (*row_node).right;
+                        debug!("next to unlink vertically: {:?}", (*row_node).get_loc());
                     }
+                    debug!("completed unlinking row {}", (*current).row_index);
                     current = (*current).down;
                     if current == (*self).head {
                         break;
                     }
+                    debug!("next row to unlink: {}", (*current).row_index);
                 }
+                debug!("finished covering column {}", (*self).index);
+            } else {
+                debug!("head is null, nothing to cover in column {}", (*self).index);
             }
         }
     }
@@ -438,8 +449,6 @@ impl Node {
             let up = (*self).up;
             let down = (*self).down;
             let column = (*self).column;
-            debug!("Unlinking node row {} from column {} (size before: {})", 
-                   (*self).row_index, (*column).index, (*column).size);
             (*up).down = down;
             (*down).up = up;
             if (*column).size == 0 {
@@ -474,6 +483,18 @@ impl Node {
             let right = (*self).right;
             (*left).right = self;
             (*right).left = self;
+        }
+    }
+
+    fn get_loc(&self) -> (usize, Option<usize>) {
+        unsafe {
+            let column_index = if self.column.is_null() {
+                None
+            } else {
+                Some((*self.column).index)
+            };
+            let row_index = self.row_index;
+            (row_index, column_index)
         }
     }
 }
