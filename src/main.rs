@@ -564,8 +564,8 @@ mod tests {
         dlx.append_row(vec![1, 0, 0, 1, 0, 0, 0]); // solution
         dlx.append_row(vec![0, 0, 0, 1, 1, 0, 1]);
         dlx.append_row(vec![0, 0, 1, 0, 1, 1, 0]); // solution
-        dlx.append_row(vec![0, 1, 0, 0, 0, 1, 1]); // solution
-        dlx.append_row(vec![0, 1, 0, 0, 0, 0, 1]);
+        dlx.append_row(vec![0, 1, 0, 0, 0, 1, 1]);
+        dlx.append_row(vec![0, 1, 0, 0, 0, 0, 1]); // solution
 
         assert_eq!(dlx.n_rows, 6);
         assert_eq!(dlx.n_cols, 7);
@@ -574,7 +574,7 @@ mod tests {
         assert!(solution.is_some());
         let mut sol = solution.unwrap();
         sol.sort(); // Sort for consistent comparison
-        assert_eq!(sol, vec![1, 3, 4]);
+        assert_eq!(sol, vec![1, 3, 5]);
     }
 
     #[test]
