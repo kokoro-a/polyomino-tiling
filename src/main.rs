@@ -49,12 +49,19 @@ impl DancingLinks {
                 current = (*current).right;
             }
 
+            debug!(
+                "best column chosen: col={}, size={}",
+                (*best_column).index,
+                (*best_column).size
+            );
+
             // 2. If there is columns with no 1s, no solution
             if (*best_column).size == 0 {
                 return None;
             }
 
             // 4. Cover the column
+            debug!("covering column {}", (*best_column).index);
             (*best_column).cover();
 
             // 5. For each row in the column:
@@ -64,13 +71,24 @@ impl DancingLinks {
                 loop {
                     // 5.1. Add the row index to the solution
                     solution.push((*row_node).row_index);
+                    debug!(
+                        "row {} selected as part of the solution candidate",
+                        (*row_node).row_index
+                    );
+                    debug!("current candidate solution: {:?}", solution);
 
                     // 5.2. Cover all columns that the row intersects with
+                    debug!(
+                        "covering columns that row {} intersects with",
+                        (*row_node).row_index
+                    );
                     let mut col_node = (*row_node).right;
                     while col_node != row_node {
+                        debug!("covering column {}", (*(*col_node).column).index,);
                         (*(*col_node).column).cover();
                         col_node = (*col_node).right;
                     }
+                    debug!("all columns covered for row {}", (*row_node).row_index);
 
                     // 5.4. Recursively call solve_helper
                     // 5.4.1. If a solution is found, return it
@@ -451,6 +469,16 @@ impl Node {
             let column = (*self).column;
             (*up).down = down;
             (*down).up = up;
+
+            // If I am the head now, make down node the new head
+            // but down node is me, i.e. I am the only node in this column, make head null
+            if (*column).head == self {
+                if down == self {
+                    (*column).head = std::ptr::null_mut();
+                } else {
+                    (*column).head = down;
+                }
+            }
             if (*column).size == 0 {
                 panic!("Attempting to unlink from empty column {}", (*column).index);
             }
