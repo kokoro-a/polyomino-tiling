@@ -129,7 +129,7 @@ impl DancingLinks {
         }
     }
 
-    fn append_row(&mut self, row: Vec<isize>) {
+    fn append_row(&mut self, row: Vec<usize>) {
         if row.len() != self.n_cols as usize {
             panic!("Row length does not match number of columns");
         }
@@ -180,7 +180,7 @@ impl DancingLinks {
         }
     }
 
-    fn to_vec(&self) -> Vec<Vec<isize>> {
+    fn to_vec(&self) -> Vec<Vec<usize>> {
         let mut matrix = vec![vec![0; self.n_cols]; self.n_rows];
 
         unsafe {
