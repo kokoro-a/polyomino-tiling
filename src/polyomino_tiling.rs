@@ -196,6 +196,43 @@ fn decode_one_hot(encoded: &Vec<usize>) -> Option<usize> {
         .find(|&(_, &val)| val == 1)
         .map(|(index, _)| index)
 }
+
+pub fn piece_placements_to_matrix_of_piece_ids(
+    piece_placements: &Vec<(usize, Vec<Vec<usize>>)>,
+    width: usize,
+    height: usize,
+) -> Vec<Vec<Option<usize>>> {
+    /*
+    ## Example
+    ```rust
+    let solution = vec![
+        (0, vec![vec![1, 0, 0], vec![0, 1, 1]]),
+        (1, vec![vec![0, 1, 0], vec![1, 0, 0]]),
+
+    let matrix = solution_to_matrix_of_piece_ids(&solution);
+    assert_eq!(
+        matrix,
+        vec![
+            vec![Some(0), Some(1), None],
+            vec![Some(1), Some(0), Some(0)],
+        ]
+    );
+    ```
+    */
+
+    let mut matrix: Vec<Vec<Option<usize>>> = vec![vec![None; width]; height];
+    for (piece_id, placement) in piece_placements {
+        for (i, row) in placement.iter().enumerate() {
+            for (j, &value) in row.iter().enumerate() {
+                if value == 1 {
+                    matrix[i][j] = Some(*piece_id);
+                }
+            }
+        }
+    }
+    matrix
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -324,5 +361,23 @@ mod tests {
         actual.sort();
         expected.sort();
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_piece_placements_to_matrix_of_piece_ids() {
+        let piece_placements = vec![
+            (0, vec![vec![1, 0, 0], vec![0, 1, 1]]),
+            (1, vec![vec![0, 1, 0], vec![1, 0, 0]]),
+        ];
+        let width = 3;
+        let height = 2;
+        let matrix = piece_placements_to_matrix_of_piece_ids(&piece_placements, width, height);
+        assert_eq!(
+            matrix,
+            vec![
+                vec![Some(0), Some(1), None],
+                vec![Some(1), Some(0), Some(0)],
+            ]
+        );
     }
 }
