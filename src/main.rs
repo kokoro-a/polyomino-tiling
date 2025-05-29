@@ -6,77 +6,7 @@ use polyomino_tiling::{PolyominoTiling, piece_placements_to_matrix_of_piece_ids}
 use pretty::str_to_matrix;
 use std::collections::HashMap;
 
-fn main() {
-    env_logger::init();
-    let mino_short_l = str_to_matrix(vec![
-        "###", //
-        "#..", //
-        "#..",
-    ]);
-    let mino_tall_l: Vec<Vec<usize>> = str_to_matrix(vec![
-        "####", //
-        "#...",
-    ]);
-    let mino_i = str_to_matrix(vec![
-        "#####", //
-    ]);
-    let mino_c = str_to_matrix(vec![
-        "###", //
-        "#..", //
-        "###",
-    ]);
-    let mino_tall_s = str_to_matrix(vec![
-        ".##", //
-        ".#.", //
-        "##.",
-    ]);
-    let mino_short_s = str_to_matrix(vec![
-        "###.", //
-        "..##", //
-    ]);
-    let mino_cross = str_to_matrix(vec![
-        ".#.", //
-        "###", //
-        ".#.",
-    ]);
-    let mino_seven = str_to_matrix(vec![
-        "##.", //
-        ".##", //
-        ".#.",
-    ]);
-    let mino_tall_t = str_to_matrix(vec![
-        "###", //
-        ".#.", //
-        ".#.", //
-    ]);
-    let mino_wide_t = str_to_matrix(vec![
-        "####", //
-        ".#..", //
-    ]);
-    let mino_m = str_to_matrix(vec![
-        ".##", //
-        "##.", //
-        "#..",
-    ]);
-    let mino_square_plus_one = str_to_matrix(vec![
-        ".#", //
-        "##", //
-        "##",
-    ]);
-
-    let polyominoes = vec![mino_tall_t, mino_wide_t, mino_tall_l, mino_square_plus_one];
-
-    let tiling = PolyominoTiling::new(4, 5, polyominoes);
-    let solution = tiling.solve();
-    let colors: HashMap<usize, (u8, u8, u8)> = HashMap::from([
-        (0, (255, 0, 0)),   // Red
-        (1, (0, 255, 0)),   // Green
-        (2, (0, 0, 255)),   // Blue
-        (3, (255, 255, 0)), // Yellow
-    ]);
-    let solution_pretty = make_solution_pretty(&solution, colors);
-    println!("Solution:\n{}", solution_pretty);
-}
+fn main() {}
 
 fn make_solution_pretty(
     solution: &Option<Vec<(usize, Vec<Vec<usize>>)>>,
@@ -113,4 +43,94 @@ fn make_solution_pretty(
 
 fn color_str(text: &str, r: u8, g: u8, b: u8) -> String {
     format!("\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, text)
+}
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_solve() {
+        let _ = env_logger::try_init();
+        let mino_short_l = str_to_matrix(vec![
+            "###", //
+            "#..", //
+            "#..",
+        ]);
+        let mino_tall_l: Vec<Vec<usize>> = str_to_matrix(vec![
+            "####", //
+            "#...",
+        ]);
+        let mino_i = str_to_matrix(vec![
+            "#####", //
+        ]);
+        let mino_c = str_to_matrix(vec![
+            "###", //
+            "#..", //
+            "###",
+        ]);
+        let mino_tall_s = str_to_matrix(vec![
+            ".##", //
+            ".#.", //
+            "##.",
+        ]);
+        let mino_short_s = str_to_matrix(vec![
+            "###.", //
+            "..##", //
+        ]);
+        let mino_cross = str_to_matrix(vec![
+            ".#.", //
+            "###", //
+            ".#.",
+        ]);
+        let mino_seven = str_to_matrix(vec![
+            "##.", //
+            ".##", //
+            ".#.",
+        ]);
+        let mino_tall_t = str_to_matrix(vec![
+            "###", //
+            ".#.", //
+            ".#.", //
+        ]);
+        let mino_wide_t = str_to_matrix(vec![
+            "####", //
+            ".#..", //
+        ]);
+        let mino_m = str_to_matrix(vec![
+            ".##", //
+            "##.", //
+            "#..",
+        ]);
+        let mino_square_plus_one = str_to_matrix(vec![
+            ".#", //
+            "##", //
+            "##",
+        ]);
+
+        let polyominoes = vec![
+            mino_tall_l,
+            mino_tall_t,
+            mino_square_plus_one,
+            mino_m,
+            mino_tall_s,
+            mino_wide_t,
+            mino_short_l,
+            mino_short_s,
+        ];
+
+        let tiling = PolyominoTiling::new(8, 5, polyominoes);
+        let solution = tiling.solve();
+        let colors: HashMap<usize, (u8, u8, u8)> = HashMap::from([
+            (0, (255, 0, 0)),     // Red
+            (1, (0, 255, 0)),     // Green
+            (2, (0, 0, 255)),     // Blue
+            (3, (255, 255, 0)),   // Yellow
+            (4, (255, 0, 255)),   // Magenta
+            (5, (0, 255, 255)),   // Cyan
+            (6, (192, 192, 192)), // Silver
+            (7, (128, 0, 128)),   // Purple
+        ]);
+        let solution_pretty = make_solution_pretty(&solution, colors);
+        println!("Solution:\n{}", solution_pretty);
+    }
 }
