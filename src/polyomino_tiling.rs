@@ -1,4 +1,4 @@
-use log::warn;
+use log::info;
 
 use crate::dancing_links::DancingLinks;
 
@@ -149,7 +149,7 @@ fn get_all_placements_without_rotation_nor_mirror(
     let matrix = matrix;
 
     if height < piece_height || width < piece_width {
-        warn!(
+        info!(
             "piece is larger than board. height={}, width={}, piece_height={}, piece_width={}",
             height, width, piece_height, piece_width
         );

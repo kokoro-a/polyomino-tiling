@@ -98,9 +98,9 @@ fn katamino(mino_names: Vec<&str>) -> Result<Option<Vec<(usize, Vec<Vec<usize>>)
         (
             "C",
             str_to_matrix(vec![
-                "###", //
-                "#..", //
-                "###",
+                "##", //
+                "#.", //
+                "##",
             ]),
         ),
         (
