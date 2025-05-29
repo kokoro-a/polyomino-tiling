@@ -25,7 +25,7 @@ impl DancingLinks {
         }
     }
 
-    pub fn from_vecs(matrix: Vec<Vec<usize>>) -> Self {
+    pub fn from_vecs(matrix: &Vec<Vec<usize>>) -> Self {
         if matrix.is_empty() {
             return DancingLinks::new();
         }
@@ -151,7 +151,7 @@ impl DancingLinks {
         }
     }
 
-    pub fn append_row(&mut self, row: Vec<usize>) {
+    pub fn append_row(&mut self, row: &Vec<usize>) {
         if row.len() != self.n_cols as usize {
             panic!("Row length does not match number of columns");
         }
@@ -556,7 +556,7 @@ mod tests {
     #[test]
     fn test_dancing_links_simple() {
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(vec![vec![1, 0], vec![0, 1]]);
+        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 0], vec![0, 1]]);
         assert_eq!(dlx.n_rows, 2);
         assert_eq!(dlx.n_cols, 2);
         assert_eq!(dlx.to_vecs(), vec![vec![1, 0], vec![0, 1]]);
@@ -566,7 +566,7 @@ mod tests {
     #[test]
     fn test_dancing_links_complex() {
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(vec![
+        let mut dlx = DancingLinks::from_vecs(&vec![
             vec![1, 0, 0, 1, 0, 0, 1],
             vec![1, 0, 0, 1, 0, 0, 0],
             vec![0, 0, 0, 1, 1, 0, 1],
@@ -588,7 +588,7 @@ mod tests {
     #[test]
     fn test_dancing_links_no_solution() {
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(vec![vec![1, 0], vec![1, 0]]);
+        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 0], vec![1, 0]]);
 
         assert_eq!(dlx.solve(), None);
     }
@@ -598,7 +598,7 @@ mod tests {
         // Matrix with single row covering all columns:
         // [1, 1, 1]  <- row 0
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(vec![vec![1, 1, 1]]);
+        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 1, 1]]);
 
         assert_eq!(dlx.solve(), Some(vec![0]));
     }
