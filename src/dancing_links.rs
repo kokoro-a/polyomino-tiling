@@ -52,6 +52,7 @@ impl DancingLinks {
     }
 
     fn solve_helper(&mut self, mut solution: Vec<usize>) -> Option<Vec<usize>> {
+        info!("current candidate solution: {:?}", solution);
         unsafe {
             // 1. If no columns are left, already found a solution
             if (*self.root).right == self.root {
@@ -523,6 +524,9 @@ impl Node {
             let down = (*self).down;
             (*up).down = self;
             (*down).up = self;
+            if (*(*self).column).head.is_null() {
+                (*(*self).column).head = self;
+            }
             (*(*self).column).size += 1;
         }
     }

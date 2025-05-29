@@ -1,28 +1,78 @@
 mod dancing_links;
 mod polyomino_tiling;
 mod pretty;
-use std::{collections::HashMap, hash::Hash};
-
+use env_logger;
 use polyomino_tiling::{PolyominoTiling, piece_placements_to_matrix_of_piece_ids};
+use pretty::str_to_matrix;
+use std::collections::HashMap;
 
 fn main() {
-    let t_mino = vec![
-        vec![1, 1, 1], //
-        vec![0, 1, 0],
-    ];
-    let l_mino = vec![
-        vec![1, 1, 1], //
-        vec![1, 0, 0],
-    ];
+    env_logger::init();
+    let mino_short_l = str_to_matrix(vec![
+        "###", //
+        "#..", //
+        "#..",
+    ]);
+    let mino_tall_l: Vec<Vec<usize>> = str_to_matrix(vec![
+        "####", //
+        "#...",
+    ]);
+    let mino_i = str_to_matrix(vec![
+        "#####", //
+    ]);
+    let mino_c = str_to_matrix(vec![
+        "###", //
+        "#..", //
+        "###",
+    ]);
+    let mino_tall_s = str_to_matrix(vec![
+        ".##", //
+        ".#.", //
+        "##.",
+    ]);
+    let mino_short_s = str_to_matrix(vec![
+        "###.", //
+        "..##", //
+    ]);
+    let mino_cross = str_to_matrix(vec![
+        ".#.", //
+        "###", //
+        ".#.",
+    ]);
+    let mino_seven = str_to_matrix(vec![
+        "##.", //
+        ".##", //
+        ".#.",
+    ]);
+    let mino_tall_t = str_to_matrix(vec![
+        "###", //
+        ".#.", //
+        ".#.", //
+    ]);
+    let mino_wide_t = str_to_matrix(vec![
+        "####", //
+        ".#..", //
+    ]);
+    let mino_m = str_to_matrix(vec![
+        ".##", //
+        "##.", //
+        "#..",
+    ]);
+    let mino_square_plus_one = str_to_matrix(vec![
+        ".#", //
+        "##", //
+        "##",
+    ]);
 
-    let polyominoes = vec![t_mino.clone(), l_mino, t_mino];
+    let polyominoes = vec![mino_tall_t, mino_wide_t, mino_tall_l, mino_square_plus_one];
 
-    let tiling = PolyominoTiling::new(4, 3, polyominoes);
+    let tiling = PolyominoTiling::new(4, 5, polyominoes);
     let solution = tiling.solve();
     let colors: HashMap<usize, (u8, u8, u8)> = HashMap::from([
-        (0, (255, 0, 0)), // Red for T-mino
-        (1, (0, 255, 0)), // Green for L-mino
-        (2, (0, 0, 255)), // Blue for another T-mino
+        (0, (255, 0, 0)),   // Red
+        (1, (0, 255, 0)),   // Green
+        (2, (0, 0, 255)),   // Blue
+        (3, (255, 255, 0)), // Yellow
     ]);
     let solution_pretty = make_solution_pretty(&solution, colors);
     println!("Solution:\n{}", solution_pretty);
