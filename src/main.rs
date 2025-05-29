@@ -6,7 +6,34 @@ use polyomino_tiling::{PolyominoTiling, piece_placements_to_matrix_of_piece_ids}
 use pretty::str_to_matrix;
 use std::collections::HashMap;
 
-fn main() {}
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let mino_names: Vec<&str> = args[1..].iter().map(|s| s.as_str()).collect();
+
+    match katamino(mino_names) {
+        Ok(solution) => {
+            let colors: HashMap<usize, (u8, u8, u8)> = HashMap::from([
+                (0, (255, 0, 0)),      // Red
+                (1, (0, 255, 0)),      // Green
+                (2, (0, 0, 255)),      // Blue
+                (3, (255, 255, 0)),    // Yellow
+                (4, (255, 0, 255)),    // Magenta
+                (5, (0, 255, 255)),    // Cyan
+                (6, (192, 192, 192)),  // Silver
+                (7, (128, 0, 128)),    // Purple
+                (8, (255, 165, 0)),    // Orange
+                (9, (128, 128, 128)),  // Gray
+                (10, (255, 192, 203)), // Pink
+                (11, (0, 128, 0)),     // Green
+            ]);
+            let solution_pretty = make_solution_pretty(&solution, colors);
+            println!("{}", solution_pretty);
+        }
+        Err(_) => {
+            eprintln!("Error: Invalid polyomino name");
+        }
+    }
+}
 
 fn make_solution_pretty(
     solution: &Option<Vec<(usize, Vec<Vec<usize>>)>>,
@@ -45,18 +72,126 @@ fn color_str(text: &str, r: u8, g: u8, b: u8) -> String {
     format!("\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, text)
 }
 
+fn katamino(mino_names: Vec<&str>) -> Result<Option<Vec<(usize, Vec<Vec<usize>>)>>, ()> {
+    let mino_dict = HashMap::from([
+        (
+            "L",
+            str_to_matrix(vec![
+                "###", //
+                "#..", //
+                "#..",
+            ]),
+        ),
+        (
+            "l",
+            str_to_matrix(vec![
+                "####", //
+                "#...",
+            ]),
+        ),
+        (
+            "I",
+            str_to_matrix(vec![
+                "#####", //
+            ]),
+        ),
+        (
+            "C",
+            str_to_matrix(vec![
+                "###", //
+                "#..", //
+                "###",
+            ]),
+        ),
+        (
+            "S",
+            str_to_matrix(vec![
+                ".##", //
+                ".#.", //
+                "##.",
+            ]),
+        ),
+        (
+            "s",
+            str_to_matrix(vec![
+                ".###", //
+                "##..",
+            ]),
+        ),
+        (
+            "X",
+            str_to_matrix(vec![
+                ".#.", //
+                "###", //
+                ".#.",
+            ]),
+        ),
+        (
+            "F",
+            str_to_matrix(vec![
+                "##.", //
+                ".##", //
+                ".#.",
+            ]),
+        ),
+        (
+            "T",
+            str_to_matrix(vec![
+                "###", //
+                ".#.", //
+                ".#.",
+            ]),
+        ),
+        (
+            "t",
+            str_to_matrix(vec![
+                "####", //
+                ".#..",
+            ]),
+        ),
+        (
+            "M",
+            str_to_matrix(vec![
+                ".##", //
+                "##.", //
+                "#..",
+            ]),
+        ),
+        (
+            "b",
+            str_to_matrix(vec![
+                "#.", //
+                "##", //
+                "##",
+            ]),
+        ),
+    ]);
+    let minos: Vec<Vec<Vec<usize>>> = mino_names
+        .iter()
+        .map(|&name| mino_dict.get(name).ok_or(()))
+        .collect::<Result<Vec<_>, ()>>()?
+        .iter()
+        .map(|&v| v.clone())
+        .collect();
+
+    let problem = PolyominoTiling::new(minos.len(), 5, minos);
+    let solution = problem.solve();
+
+    Ok(solution)
+}
+
 mod tests {
     use super::*;
 
     #[test]
     fn test_solve() {
         let _ = env_logger::try_init();
-        let mino_short_l = str_to_matrix(vec![
+        let mino_l3x3 = str_to_matrix(vec![
             "###", //
             "#..", //
             "#..",
         ]);
-        let mino_tall_l: Vec<Vec<usize>> = str_to_matrix(vec![
+        let mino_l2x4: Vec<Vec<usize>> = str_to_matrix(vec![
             "####", //
             "#...",
         ]);
@@ -68,12 +203,12 @@ mod tests {
             "#..", //
             "###",
         ]);
-        let mino_tall_s = str_to_matrix(vec![
+        let mino_s3x3 = str_to_matrix(vec![
             ".##", //
             ".#.", //
             "##.",
         ]);
-        let mino_short_s = str_to_matrix(vec![
+        let mino_s2x4 = str_to_matrix(vec![
             "###.", //
             "..##", //
         ]);
@@ -82,17 +217,17 @@ mod tests {
             "###", //
             ".#.",
         ]);
-        let mino_seven = str_to_matrix(vec![
+        let mino_f = str_to_matrix(vec![
             "##.", //
             ".##", //
             ".#.",
         ]);
-        let mino_tall_t = str_to_matrix(vec![
+        let mino_t3x3 = str_to_matrix(vec![
             "###", //
             ".#.", //
             ".#.", //
         ]);
-        let mino_wide_t = str_to_matrix(vec![
+        let mino_t2x4 = str_to_matrix(vec![
             "####", //
             ".#..", //
         ]);
@@ -101,21 +236,14 @@ mod tests {
             "##.", //
             "#..",
         ]);
-        let mino_square_plus_one = str_to_matrix(vec![
+        let mino_b = str_to_matrix(vec![
             ".#", //
             "##", //
             "##",
         ]);
 
         let polyominoes = vec![
-            mino_tall_l,
-            mino_tall_t,
-            mino_square_plus_one,
-            mino_m,
-            mino_tall_s,
-            mino_wide_t,
-            mino_short_l,
-            mino_short_s,
+            mino_l3x3, mino_t3x3, mino_b, mino_m, mino_s3x3, mino_t2x4, mino_l2x4, mino_s2x4,
         ];
 
         let tiling = PolyominoTiling::new(8, 5, polyominoes);

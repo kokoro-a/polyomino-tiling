@@ -1,3 +1,5 @@
+use log::warn;
+
 use crate::dancing_links::DancingLinks;
 
 pub struct PolyominoTiling {
@@ -140,17 +142,24 @@ fn get_all_placements_without_rotation_nor_mirror(
     if matrix.is_empty() || matrix[0].is_empty() {
         return vec![vec![vec![0; width]; height]];
     }
-    let n_row = matrix.len();
-    let n_col = matrix[0].len();
+    let piece_height = matrix.len();
+    let piece_width = matrix[0].len();
 
     let mut placements = vec![];
     let matrix = matrix;
 
-    for i in 0..=height - n_row {
-        for j in 0..=width - n_col {
+    if height < piece_height || width < piece_width {
+        warn!(
+            "piece is larger than board. height={}, width={}, piece_height={}, piece_width={}",
+            height, width, piece_height, piece_width
+        );
+        return placements;
+    }
+    for i in 0..=height - piece_height {
+        for j in 0..=width - piece_width {
             let mut placement = vec![vec![0; width]; height];
-            for r in 0..n_row {
-                for c in 0..n_col {
+            for r in 0..piece_height {
+                for c in 0..piece_width {
                     placement[i + r][j + c] = matrix[r][c];
                 }
             }
