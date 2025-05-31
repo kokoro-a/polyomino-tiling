@@ -103,16 +103,7 @@ h1 {
     justify-content: center;
 }
 
-.polyomino-shape {
-    display: grid;
-    gap: 1px;
-    background: transparent;
-}
-
-.polyomino-shape::before {
-    content: '';
-    grid-area: 1 / 1;
-}
+/* Removed old polyomino-shape styles that conflict with unified approach */
 
 .polyomino-label {
     font-size: 12px;
@@ -133,122 +124,10 @@ h1 {
     color: white;
 }
 
-/* Polyomino shape definitions */
+/* Unified polyomino shape styles */
 .polyomino-shape {
-    position: relative;
     width: 40px;
     height: 30px;
-}
-
-.polyomino-shape::before {
-    content: '';
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: #007bff;
-    border-radius: 1px;
-    transition: background 0.3s ease;
-}
-
-.polyomino-btn:hover .polyomino-shape::before {
-    background: white;
-}
-
-.polyomino-btn.selected .polyomino-shape::before {
-    background: white;
-}
-
-/* Override box-shadow colors for hover/selected states */
-.polyomino-btn:hover .polyomino-L::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 0 7px 0 white, 0 14px 0 white; }
-.polyomino-btn:hover .polyomino-l::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 21px 0 0 white, 0 7px 0 white; }
-.polyomino-btn:hover .polyomino-I::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 21px 0 0 white, 28px 0 0 white; }
-.polyomino-btn:hover .polyomino-C::before { box-shadow: 7px 0 0 white, 0 7px 0 white, 0 14px 0 white, 7px 14px 0 white; }
-.polyomino-btn:hover .polyomino-S::before { box-shadow: 7px 0 0 white, 0 7px 0 white, -7px 14px 0 white, 0 14px 0 white; }
-.polyomino-btn:hover .polyomino-s::before { box-shadow: 7px 0 0 white, 14px 0 0 white, -7px 7px 0 white, 0 7px 0 white; }
-.polyomino-btn:hover .polyomino-X::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 7px -7px 0 white, 7px 7px 0 white; }
-.polyomino-btn:hover .polyomino-F::before { box-shadow: 7px 0 0 white, 7px 7px 0 white, 14px 7px 0 white, 7px 14px 0 white; }
-.polyomino-btn:hover .polyomino-T::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 7px 7px 0 white, 7px 14px 0 white; }
-.polyomino-btn:hover .polyomino-t::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 21px 0 0 white, 7px 7px 0 white; }
-.polyomino-btn:hover .polyomino-M::before { box-shadow: 7px 0 0 white, -7px 7px 0 white, 0 7px 0 white, -7px 14px 0 white; }
-.polyomino-btn:hover .polyomino-b::before { box-shadow: 0 7px 0 white, 7px 7px 0 white, 0 14px 0 white, 7px 14px 0 white; }
-
-.polyomino-btn.selected .polyomino-L::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 0 7px 0 white, 0 14px 0 white; }
-.polyomino-btn.selected .polyomino-l::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 21px 0 0 white, 0 7px 0 white; }
-.polyomino-btn.selected .polyomino-I::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 21px 0 0 white, 28px 0 0 white; }
-.polyomino-btn.selected .polyomino-C::before { box-shadow: 7px 0 0 white, 0 7px 0 white, 0 14px 0 white, 7px 14px 0 white; }
-.polyomino-btn.selected .polyomino-S::before { box-shadow: 7px 0 0 white, 0 7px 0 white, -7px 14px 0 white, 0 14px 0 white; }
-.polyomino-btn.selected .polyomino-s::before { box-shadow: 7px 0 0 white, 14px 0 0 white, -7px 7px 0 white, 0 7px 0 white; }
-.polyomino-btn.selected .polyomino-X::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 7px -7px 0 white, 7px 7px 0 white; }
-.polyomino-btn.selected .polyomino-F::before { box-shadow: 7px 0 0 white, 7px 7px 0 white, 14px 7px 0 white, 7px 14px 0 white; }
-.polyomino-btn.selected .polyomino-T::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 7px 7px 0 white, 7px 14px 0 white; }
-.polyomino-btn.selected .polyomino-t::before { box-shadow: 7px 0 0 white, 14px 0 0 white, 21px 0 0 white, 7px 7px 0 white; }
-.polyomino-btn.selected .polyomino-M::before { box-shadow: 7px 0 0 white, -7px 7px 0 white, 0 7px 0 white, -7px 14px 0 white; }
-.polyomino-btn.selected .polyomino-b::before { box-shadow: 0 7px 0 white, 7px 7px 0 white, 0 14px 0 white, 7px 14px 0 white; }
-
-/* L piece */
-.polyomino-L::before {
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, 0 7px 0 #007bff, 0 14px 0 #007bff;
-}
-
-/* l piece */
-.polyomino-l::before {
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, 21px 0 0 #007bff, 0 7px 0 #007bff;
-}
-
-/* I piece */
-.polyomino-I::before {
-    top: 12px;
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, 21px 0 0 #007bff, 28px 0 0 #007bff;
-}
-
-/* C piece */
-.polyomino-C::before {
-    box-shadow: 7px 0 0 #007bff, 0 7px 0 #007bff, 0 14px 0 #007bff, 7px 14px 0 #007bff;
-}
-
-/* S piece */
-.polyomino-S::before {
-    left: 7px;
-    box-shadow: 7px 0 0 #007bff, 0 7px 0 #007bff, -7px 14px 0 #007bff, 0 14px 0 #007bff;
-}
-
-/* s piece */
-.polyomino-s::before {
-    left: 7px;
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, -7px 7px 0 #007bff, 0 7px 0 #007bff;
-}
-
-/* X piece */
-.polyomino-X::before {
-    left: 7px;
-    top: 7px;
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, 7px -7px 0 #007bff, 7px 7px 0 #007bff;
-}
-
-/* F piece */
-.polyomino-F::before {
-    box-shadow: 7px 0 0 #007bff, 7px 7px 0 #007bff, 14px 7px 0 #007bff, 7px 14px 0 #007bff;
-}
-
-/* T piece */
-.polyomino-T::before {
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, 7px 7px 0 #007bff, 7px 14px 0 #007bff;
-}
-
-/* t piece */
-.polyomino-t::before {
-    box-shadow: 7px 0 0 #007bff, 14px 0 0 #007bff, 21px 0 0 #007bff, 7px 7px 0 #007bff;
-}
-
-/* M piece */
-.polyomino-M::before {
-    left: 7px;
-    box-shadow: 7px 0 0 #007bff, -7px 7px 0 #007bff, 0 7px 0 #007bff, -7px 14px 0 #007bff;
-}
-
-/* b piece */
-.polyomino-b::before {
-    box-shadow: 0 7px 0 #007bff, 7px 7px 0 #007bff, 0 14px 0 #007bff, 7px 14px 0 #007bff;
 }
 
 .selected-pieces {
@@ -651,24 +530,24 @@ h1 {
     height: 30px;
 }
 
-.custom-active-cell {
+.polyomino-active-cell {
     background: #007bff;
 }
 
-.custom-empty-cell {
+.polyomino-empty-cell {
     background: transparent;
 }
 
-.polyomino-btn:hover .custom-active-cell {
+.polyomino-btn:hover .polyomino-active-cell {
     background: white !important;
 }
 
-.polyomino-btn.selected .custom-active-cell {
+.polyomino-btn.selected .polyomino-active-cell {
     background: white !important;
 }
 
-.polyomino-btn:hover .custom-empty-cell,
-.polyomino-btn.selected .custom-empty-cell {
+.polyomino-btn:hover .polyomino-empty-cell,
+.polyomino-btn.selected .polyomino-empty-cell {
     background: transparent !important;
 }
 

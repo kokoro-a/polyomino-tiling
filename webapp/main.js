@@ -8,6 +8,23 @@ class PolyominoApp {
         this.isInitialized = false;
         this.editorGrid = [];
         this.editorSize = 4;
+        
+        // Define preset polyomino patterns
+        this.presetPolyominoes = {
+            'L': [[1,1,1], [1,0,0], [1,0,0]],
+            'l': [[1,1,1,1], [1,0,0,0]],
+            'I': [[1,1,1,1,1]],
+            'C': [[1,1], [1,0], [1,1]],
+            'S': [[0,1,1], [0,1,0], [1,1,0]],
+            's': [[0,1,1,1], [1,1,0,0]],
+            'X': [[0,1,0], [1,1,1], [0,1,0]],
+            'F': [[1,1,0], [0,1,1], [0,1,0]],
+            'T': [[1,1,1], [0,1,0], [0,1,0]],
+            't': [[1,1,1,1], [0,1,0,0]],
+            'M': [[0,1,1], [1,1,0], [1,0,0]],
+            'b': [[1,0], [1,1], [1,1]]
+        };
+        
         this.init();
     }
 
@@ -15,6 +32,7 @@ class PolyominoApp {
         try {
             await init();
             this.isInitialized = true;
+            this.initializePresetButtons();
             this.setupEventListeners();
             this.updateStatus("Ready! Select polyominoes and click 'Solve Puzzle'");
         } catch (error) {
@@ -23,12 +41,34 @@ class PolyominoApp {
         }
     }
 
-    setupEventListeners() {
-        // Polyomino selection buttons
-        document.querySelectorAll('.polyomino-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.togglePiece(btn.dataset.piece));
+    initializePresetButtons() {
+        const buttonsContainer = document.getElementById('polyomino-buttons');
+        
+        // Create buttons for all preset polyominoes
+        Object.entries(this.presetPolyominoes).forEach(([name, matrix]) => {
+            const button = document.createElement('button');
+            button.className = 'polyomino-btn';
+            button.dataset.piece = name;
+            
+            // Create visual representation using unified method
+            const shapeDiv = this.createPolyominoShape(matrix);
+            
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'polyomino-label';
+            labelSpan.textContent = name;
+            
+            button.appendChild(shapeDiv);
+            button.appendChild(labelSpan);
+            
+            button.addEventListener('click', () => this.togglePiece(name));
+            
+            buttonsContainer.appendChild(button);
         });
+    }
 
+    setupEventListeners() {
+        // Note: Polyomino buttons are now handled individually when created
+        
         // Solve button
         document.getElementById('solve-btn').addEventListener('click', () => this.solvePuzzle());
 
@@ -432,8 +472,40 @@ class PolyominoApp {
         this.updateStatus(`Custom polyomino "${name}" added successfully!`, 'success');
     }
 
+    createPolyominoShape(matrix) {
+        console.log('Creating shape for matrix:', matrix);
+        const shapeDiv = document.createElement('div');
+        shapeDiv.className = 'polyomino-shape unified-shape';
+        shapeDiv.style.display = 'grid';
+        shapeDiv.style.gap = '1px';
+        shapeDiv.style.gridTemplateColumns = `repeat(${matrix[0].length}, 6px)`;
+        shapeDiv.style.gridTemplateRows = `repeat(${matrix.length}, 6px)`;
+        shapeDiv.style.justifyContent = 'center';
+        
+        // Add cells for the shape
+        for (let row = 0; row < matrix.length; row++) {
+            for (let col = 0; col < matrix[row].length; col++) {
+                const cell = document.createElement('div');
+                cell.style.width = '6px';
+                cell.style.height = '6px';
+                cell.style.borderRadius = '1px';
+                
+                if (matrix[row][col] === 1) {
+                    cell.classList.add('polyomino-active-cell');
+                    console.log(`Active cell at [${row}][${col}]`);
+                } else {
+                    cell.classList.add('polyomino-empty-cell');
+                }
+                
+                shapeDiv.appendChild(cell);
+            }
+        }
+        
+        return shapeDiv;
+    }
+
     addCustomPolyominoButton(fullName, displayName) {
-        const buttonsContainer = document.querySelector('.polyomino-buttons');
+        const buttonsContainer = document.getElementById('polyomino-buttons');
         
         const button = document.createElement('button');
         button.className = 'polyomino-btn';
@@ -442,32 +514,8 @@ class PolyominoApp {
         // Get the custom polyomino matrix
         const customMino = this.customPolyominoes.find(m => m.name === fullName);
         
-        // Create visual representation
-        const shapeDiv = document.createElement('div');
-        shapeDiv.className = 'polyomino-shape custom-shape';
-        shapeDiv.style.display = 'grid';
-        shapeDiv.style.gap = '1px';
-        shapeDiv.style.gridTemplateColumns = `repeat(${customMino.matrix[0].length}, 6px)`;
-        shapeDiv.style.gridTemplateRows = `repeat(${customMino.matrix.length}, 6px)`;
-        shapeDiv.style.justifyContent = 'center';
-        
-        // Add cells for the custom shape
-        for (let row = 0; row < customMino.matrix.length; row++) {
-            for (let col = 0; col < customMino.matrix[row].length; col++) {
-                const cell = document.createElement('div');
-                cell.style.width = '6px';
-                cell.style.height = '6px';
-                cell.style.borderRadius = '1px';
-                
-                if (customMino.matrix[row][col] === 1) {
-                    cell.classList.add('custom-active-cell');
-                } else {
-                    cell.classList.add('custom-empty-cell');
-                }
-                
-                shapeDiv.appendChild(cell);
-            }
-        }
+        // Create visual representation using unified method
+        const shapeDiv = this.createPolyominoShape(customMino.matrix);
         
         const labelSpan = document.createElement('span');
         labelSpan.className = 'polyomino-label';
