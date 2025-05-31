@@ -44,6 +44,9 @@ fn make_solution_pretty(
     }
 
     let solution = solution.as_ref().unwrap();
+    if solution.is_empty() {
+        return "\n".to_string();
+    }
     let placement_matrix = piece_placements_to_matrix_of_piece_ids(
         solution,
         solution[0].1[0].len(),
