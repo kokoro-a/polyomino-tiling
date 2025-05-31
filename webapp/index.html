@@ -73,6 +73,9 @@
                         <span class="polyomino-label">b</span>
                     </button>
                 </div>
+                <div class="custom-mino-section">
+                    <button id="add-mino-btn" class="add-mino-btn">+ Add Custom Mino</button>
+                </div>
                 <div class="selected-pieces">
                     <h4>Selected Pieces:</h4>
                     <div id="selected-list"></div>
@@ -94,6 +97,49 @@
                 <h3>Solution:</h3>
                 <div id="board-container">
                     <div id="board"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Polyomino Editor Modal -->
+    <div id="custom-mino-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Custom Polyomino</h3>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="editor-section">
+                    <h4>Draw your polyomino:</h4>
+                    <div class="editor-instructions">
+                        Click cells to toggle them on/off. Create connected shapes only.
+                    </div>
+                    <div id="mino-editor" class="mino-editor"></div>
+                </div>
+                <div class="editor-controls">
+                    <div class="editor-inputs">
+                        <label>
+                            Name: <input type="text" id="custom-mino-name" placeholder="My Mino" maxlength="10">
+                        </label>
+                        <label>
+                            Grid Size: 
+                            <select id="editor-size">
+                                <option value="3">3x3</option>
+                                <option value="4" selected>4x4</option>
+                                <option value="5">5x5</option>
+                                <option value="6">6x6</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="editor-buttons">
+                        <button id="clear-editor-btn">Clear</button>
+                        <button id="save-mino-btn">Save Mino</button>
+                    </div>
+                </div>
+                <div class="editor-preview">
+                    <h4>Preview:</h4>
+                    <div id="mino-preview"></div>
                 </div>
             </div>
         </div>
