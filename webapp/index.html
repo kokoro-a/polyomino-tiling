@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyomino Tiling Solver</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Polyomino Tiling Solver</h1>
+        
+        <div class="controls">
+            <div class="board-config">
+                <h3>Board Configuration</h3>
+                <label>
+                    Width: <input type="number" id="board-width" value="8" min="1" max="20">
+                </label>
+                <label>
+                    Height: <input type="number" id="board-height" value="5" min="1" max="20">
+                </label>
+            </div>
+            
+            <div class="polyomino-selection">
+                <h3>Select Polyominoes</h3>
+                <div class="polyomino-buttons">
+                    <button class="polyomino-btn" data-piece="L">L</button>
+                    <button class="polyomino-btn" data-piece="l">l</button>
+                    <button class="polyomino-btn" data-piece="I">I</button>
+                    <button class="polyomino-btn" data-piece="C">C</button>
+                    <button class="polyomino-btn" data-piece="S">S</button>
+                    <button class="polyomino-btn" data-piece="s">s</button>
+                    <button class="polyomino-btn" data-piece="X">X</button>
+                    <button class="polyomino-btn" data-piece="F">F</button>
+                    <button class="polyomino-btn" data-piece="T">T</button>
+                    <button class="polyomino-btn" data-piece="t">t</button>
+                    <button class="polyomino-btn" data-piece="M">M</button>
+                    <button class="polyomino-btn" data-piece="b">b</button>
+                </div>
+                <div class="selected-pieces">
+                    <h4>Selected Pieces:</h4>
+                    <div id="selected-list"></div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button id="solve-btn">Solve Puzzle</button>
+                <button id="clear-btn">Clear Selection</button>
+            </div>
+        </div>
+        
+        <div class="result-area">
+            <div class="status">
+                <div id="status-message">Select polyominoes and click "Solve Puzzle"</div>
+            </div>
+            
+            <div class="visualization">
+                <h3>Solution:</h3>
+                <div id="board-container">
+                    <div id="board"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
