@@ -446,8 +446,9 @@ class PolyominoApp {
         const shapeDiv = document.createElement('div');
         shapeDiv.className = 'polyomino-shape custom-shape';
         shapeDiv.style.display = 'grid';
-        shapeDiv.style.gap = '0px';
+        shapeDiv.style.gap = '1px';
         shapeDiv.style.gridTemplateColumns = `repeat(${customMino.matrix[0].length}, 6px)`;
+        shapeDiv.style.gridTemplateRows = `repeat(${customMino.matrix.length}, 6px)`;
         shapeDiv.style.justifyContent = 'center';
         
         // Add cells for the custom shape
@@ -459,9 +460,9 @@ class PolyominoApp {
                 cell.style.borderRadius = '1px';
                 
                 if (customMino.matrix[row][col] === 1) {
-                    cell.style.background = '#007bff';
+                    cell.classList.add('custom-active-cell');
                 } else {
-                    cell.style.background = 'transparent';
+                    cell.classList.add('custom-empty-cell');
                 }
                 
                 shapeDiv.appendChild(cell);

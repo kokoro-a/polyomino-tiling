@@ -651,12 +651,25 @@ h1 {
     height: 30px;
 }
 
-.polyomino-btn:hover .custom-shape div {
+.custom-active-cell {
+    background: #007bff;
+}
+
+.custom-empty-cell {
+    background: transparent;
+}
+
+.polyomino-btn:hover .custom-active-cell {
     background: white !important;
 }
 
-.polyomino-btn.selected .custom-shape div {
+.polyomino-btn.selected .custom-active-cell {
     background: white !important;
+}
+
+.polyomino-btn:hover .custom-empty-cell,
+.polyomino-btn.selected .custom-empty-cell {
+    background: transparent !important;
 }
 
 @media (max-width: 768px) {
