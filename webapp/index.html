@@ -13,12 +13,22 @@
         <div class="controls">
             <div class="board-config">
                 <h3>Board Configuration</h3>
-                <label>
-                    Width: <input type="number" id="board-width" value="8" min="1" max="20">
-                </label>
-                <label>
-                    Height: <input type="number" id="board-height" value="5" min="1" max="20">
-                </label>
+                <div class="dimension-control">
+                    <label>
+                        Width: <input type="number" id="board-width" value="8" min="1" max="20">
+                        <label class="auto-checkbox">
+                            <input type="checkbox" id="auto-width"> Auto
+                        </label>
+                    </label>
+                </div>
+                <div class="dimension-control">
+                    <label>
+                        Height: <input type="number" id="board-height" value="5" min="1" max="20">
+                        <label class="auto-checkbox">
+                            <input type="checkbox" id="auto-height"> Auto
+                        </label>
+                    </label>
+                </div>
             </div>
             
             <div class="polyomino-selection">
@@ -66,7 +76,7 @@
                 <div class="editor-section">
                     <h4>Draw your polyomino:</h4>
                     <div class="editor-instructions">
-                        Click cells to toggle them on/off. Create connected shapes only.
+                        Click cells to toggle them on/off. Create any pattern you want.
                     </div>
                     <div id="mino-editor" class="mino-editor"></div>
                 </div>

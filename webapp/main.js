@@ -78,6 +78,10 @@ class PolyominoApp {
         // Board dimension inputs
         document.getElementById('board-width').addEventListener('change', () => this.updateBoard());
         document.getElementById('board-height').addEventListener('change', () => this.updateBoard());
+        
+        // Auto calculation checkboxes
+        document.getElementById('auto-width').addEventListener('change', (e) => this.handleAutoWidth(e.target.checked));
+        document.getElementById('auto-height').addEventListener('change', (e) => this.handleAutoHeight(e.target.checked));
 
         // Custom polyomino editor
         document.getElementById('add-mino-btn').addEventListener('click', () => this.openEditor());
@@ -119,6 +123,9 @@ class PolyominoApp {
         listElement.textContent = this.selectedPieces.length > 0 
             ? this.selectedPieces.join(', ') 
             : 'None selected';
+            
+        // Update auto-calculated dimensions
+        this.updateAutoDimensions();
     }
 
     clearSelection() {
@@ -418,11 +425,7 @@ class PolyominoApp {
             return;
         }
         
-        // Check if shape is connected
-        if (!this.isConnected()) {
-            alert('Polyomino must be a connected shape (all cells must touch).');
-            return;
-        }
+        // Note: Custom shapes don't need to be connected
         
         // Convert to matrix format (trim to bounding box)
         let minRow = this.editorSize, maxRow = -1;
@@ -527,6 +530,104 @@ class PolyominoApp {
         button.addEventListener('click', () => this.togglePiece(fullName));
         
         buttonsContainer.appendChild(button);
+    }
+
+    // Auto dimension calculation methods
+    handleAutoWidth(checked) {
+        const widthInput = document.getElementById('board-width');
+        const heightCheckbox = document.getElementById('auto-height');
+        
+        if (checked) {
+            // Disable height auto and enable width auto
+            heightCheckbox.checked = false;
+            this.handleAutoHeight(false);
+            widthInput.disabled = true;
+        } else {
+            widthInput.disabled = false;
+        }
+        
+        this.updateAutoDimensions();
+    }
+
+    handleAutoHeight(checked) {
+        const heightInput = document.getElementById('board-height');
+        const widthCheckbox = document.getElementById('auto-width');
+        
+        if (checked) {
+            // Disable width auto and enable height auto
+            widthCheckbox.checked = false;
+            this.handleAutoWidth(false);
+            heightInput.disabled = true;
+        } else {
+            heightInput.disabled = false;
+        }
+        
+        this.updateAutoDimensions();
+    }
+
+    calculateTotalCells() {
+        let totalCells = 0;
+        
+        for (const pieceName of this.selectedPieces) {
+            if (pieceName.startsWith('custom_')) {
+                // Custom polyomino
+                const customMino = this.customPolyominoes.find(m => m.name === pieceName);
+                if (customMino) {
+                    totalCells += this.countMatrixCells(customMino.matrix);
+                }
+            } else {
+                // Preset polyomino
+                const matrix = this.presetPolyominoes[pieceName];
+                if (matrix) {
+                    totalCells += this.countMatrixCells(matrix);
+                }
+            }
+        }
+        
+        return totalCells;
+    }
+
+    countMatrixCells(matrix) {
+        let cells = 0;
+        for (let row = 0; row < matrix.length; row++) {
+            for (let col = 0; col < matrix[row].length; col++) {
+                if (matrix[row][col] === 1) {
+                    cells++;
+                }
+            }
+        }
+        return cells;
+    }
+
+    updateAutoDimensions() {
+        const autoWidth = document.getElementById('auto-width').checked;
+        const autoHeight = document.getElementById('auto-height').checked;
+        const widthInput = document.getElementById('board-width');
+        const heightInput = document.getElementById('board-height');
+        
+        if (!autoWidth && !autoHeight) {
+            return; // No auto calculation needed
+        }
+        
+        const totalCells = this.calculateTotalCells();
+        
+        if (totalCells === 0) {
+            return; // No pieces selected
+        }
+        
+        if (autoWidth) {
+            const height = parseInt(heightInput.value);
+            if (height > 0) {
+                const calculatedWidth = Math.ceil(totalCells / height);
+                widthInput.value = calculatedWidth;
+            }
+        } else if (autoHeight) {
+            const width = parseInt(widthInput.value);
+            if (width > 0) {
+                const calculatedHeight = Math.ceil(totalCells / width);
+                heightInput.value = calculatedHeight;
+            }
+        }
     }
 }
 
