@@ -1,6 +1,6 @@
 [build]
   publish = "webapp"
-  command = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source ~/.cargo/env && cargo install wasm-pack && wasm-pack build --target web --out-dir pkg && mkdir -p webapp/pkg && cp -r pkg/* webapp/pkg/"
+  command = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source ~/.cargo/env && (cargo install wasm-pack || true) && wasm-pack build --target web --out-dir pkg && mkdir -p webapp/pkg && cp -r pkg/* webapp/pkg/"
 
 [build.environment]
   RUST_VERSION = "1.70"
