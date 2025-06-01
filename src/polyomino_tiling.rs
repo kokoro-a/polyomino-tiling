@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 
 use crate::dancing_links::DancingLinks;
 
@@ -83,11 +83,37 @@ impl PolyominoTiling {
     }
 
     pub fn solve(&self) -> Option<Vec<(usize, Vec<Vec<usize>>)>> {
+        if !self.is_board_size_eq_to_number_of_cells_of_polyominoes() {
+            info!(
+                "Board size does not match the total number of cells in polyominoes. \
+                width={}, height={}, total_cells={}",
+                self.width,
+                self.height,
+                self.polyominoes
+                    .iter()
+                    .map(|polyomino| polyomino.iter().flatten().sum::<usize>())
+                    .sum::<usize>()
+            );
+            return None;
+        }
         let matrix = self.encode_into_exact_cover_problem_matrix();
         let mut dlx = DancingLinks::from_vecs(&matrix);
         let dlx_solution = dlx.solve();
         let solution = self.decode_dlx_solution(&matrix, &dlx_solution);
         solution
+    }
+
+    fn is_board_size_eq_to_number_of_cells_of_polyominoes(&self) -> bool {
+        let total_cells: usize = self
+            .polyominoes
+            .iter()
+            .map(|polyomino| polyomino.iter().flatten().sum::<usize>())
+            .sum();
+        debug!(
+            "width={}, height={}, total_cells={}",
+            self.width, self.height, total_cells
+        );
+        total_cells == self.width * self.height
     }
 }
 
@@ -388,5 +414,23 @@ mod tests {
                 vec![Some(1), Some(0), Some(0)],
             ]
         );
+    }
+
+    #[test]
+    fn test_is_board_size_eq_to_number_of_cells_of_polyominoes() {
+        _ = env_logger::builder().is_test(true).try_init();
+        let polyominoes = vec![
+            vec![vec![1, 0], vec![0, 1]], // 2 cells
+            vec![vec![1, 1, 1]],          // 3 cells
+        ];
+        let tiling = PolyominoTiling::new(2, 2, polyominoes);
+        assert!(!tiling.is_board_size_eq_to_number_of_cells_of_polyominoes());
+
+        let polyominoes = vec![
+            vec![vec![1, 0], vec![0, 1]], // 2 cells
+            vec![vec![1, 1]],             // 2 cells
+        ];
+        let tiling = PolyominoTiling::new(2, 2, polyominoes);
+        assert!(tiling.is_board_size_eq_to_number_of_cells_of_polyominoes());
     }
 }
