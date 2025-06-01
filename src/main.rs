@@ -7,6 +7,7 @@ use pretty::str_to_matrix;
 use std::collections::HashMap;
 
 fn main() {
+    env_logger::init();
     let args: Vec<String> = std::env::args().collect();
     let mino_names: Vec<&str> = args[1..].iter().map(|s| s.as_str()).collect();
 
@@ -54,8 +55,8 @@ fn make_solution_pretty(
     );
 
     let mut s = String::new();
-    for (row, row_data) in placement_matrix.iter().enumerate() {
-        for (col, &piece_id) in row_data.iter().enumerate() {
+    for row_data in placement_matrix.iter() {
+        for &piece_id in row_data.iter() {
             let _s: String = if piece_id.is_none() {
                 color_str(".", 100, 100, 100)
             } else if let Some(&(r, g, b)) = colors.get(&piece_id.unwrap()) {
@@ -183,6 +184,7 @@ fn katamino(mino_names: Vec<&str>) -> Result<Option<Vec<(usize, Vec<Vec<usize>>)
     Ok(solution)
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -198,14 +200,7 @@ mod tests {
             "####", //
             "#...",
         ]);
-        let mino_i = str_to_matrix(vec![
-            "#####", //
-        ]);
-        let mino_c = str_to_matrix(vec![
-            "###", //
-            "#..", //
-            "###",
-        ]);
+
         let mino_s3x3 = str_to_matrix(vec![
             ".##", //
             ".#.", //
@@ -215,16 +210,7 @@ mod tests {
             "###.", //
             "..##", //
         ]);
-        let mino_cross = str_to_matrix(vec![
-            ".#.", //
-            "###", //
-            ".#.",
-        ]);
-        let mino_f = str_to_matrix(vec![
-            "##.", //
-            ".##", //
-            ".#.",
-        ]);
+
         let mino_t3x3 = str_to_matrix(vec![
             "###", //
             ".#.", //
@@ -244,6 +230,27 @@ mod tests {
             "##", //
             "##",
         ]);
+
+        /*
+        let mino_i = str_to_matrix(vec![
+            "#####", //
+        ]);
+        let mino_c = str_to_matrix(vec![
+            "###", //
+            "#..", //
+            "###",
+        ]);
+        let mino_cross = str_to_matrix(vec![
+            ".#.", //
+            "###", //
+            ".#.",
+        ]);
+        let mino_f = str_to_matrix(vec![
+            "##.", //
+            ".##", //
+            ".#.",
+        ]);
+        */
 
         let polyominoes = vec![
             mino_l3x3, mino_t3x3, mino_b, mino_m, mino_s3x3, mino_t2x4, mino_l2x4, mino_s2x4,

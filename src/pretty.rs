@@ -40,6 +40,8 @@ pub fn matrix_to_str(matrix: &Vec<Vec<usize>>) -> Vec<String> {
         })
         .collect()
 }
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
