@@ -1,65 +1,100 @@
-# Polyomino Tiling Web Application
+# ポリオミノ敷き詰め問題ソルバー Web アプリケーション
 
-A web-based solver for polyomino tiling puzzles, powered by WebAssembly and Rust.
+WebAssembly と Rust で作られた、ポリオミノ敷き詰め問題のインタラクティブな Web ベースソルバーです。
 
-## Features
+## 機能
 
-- Interactive web interface for selecting polyomino pieces
-- Real-time puzzle solving using dancing links algorithm
-- Visual representation of solutions
-- Support for 12 different polyomino shapes (L, l, I, C, S, s, X, F, T, t, M, b)
-- Configurable board dimensions (1x1 to 20x20)
+- **インタラクティブな Web インターフェース** でポリオミノピースの選択と可視化
+- **リアルタイムパズル解決** Dancing Links アルゴリズムによる厳密被覆問題の解法
+- **12 種類の定義済みポリオミノ**
+- **カスタムポリオミノエディター** で独自の形状を作成
+- **設定可能なボードサイズ** (1x1 から 20x20) 自動サイズ調整オプション付き
+- **視覚的解答表示** 色分けされたピース
+- **レスポンシブデザイン** デスクトップとモバイルに対応
 
-## Usage
+## 使用方法
 
-1. **Start a local server** (required for WASM modules):
+### アプリケーションの実行
+
+1. **ローカルサーバーを起動**:
+
    ```bash
-   # From the webapp directory
+   # webappディレクトリから
    python3 -m http.server 8000
-   # Or with Node.js
+   # または Node.js で
    npx serve .
    ```
 
-2. **Open your browser** and navigate to:
+2. **ブラウザで開く**:
    ```
    http://localhost:8000
    ```
 
-3. **Configure the puzzle**:
-   - Set board width and height
-   - Click on polyomino buttons to select pieces
-   - Click "Solve Puzzle" to find a solution
+### ソルバーの使用
 
-4. **View results**:
-   - Solutions are displayed as a colorful grid
-   - Each piece is shown in a different color
-   - Hover over cells to see piece information
+1. **ボードの設定**:
 
-## Polyomino Pieces
+   - 幅と高さを手動で設定
+   - または自動サイズ調整: 「Auto」にチェックして、選択したピースの総面積に基づいて自動計算
 
-- **L**: 4-cell L-shaped piece
-- **l**: 5-cell L-shaped piece  
-- **I**: 5-cell straight line
-- **C**: 4-cell C-shaped piece
-- **S**: 5-cell S-shaped piece
-- **s**: 4-cell S-shaped piece
-- **X**: 5-cell plus/cross shape
-- **F**: 5-cell F-shaped piece
-- **T**: 5-cell T-shaped piece
-- **t**: 4-cell T-shaped piece
-- **M**: 5-cell M-shaped piece
-- **b**: 4-cell small block
+2. **ポリオミノピースの選択**:
 
-## Technical Details
+   - 定義済みポリオミノボタンをクリックして選択/選択解除
+   - 「Add Custom Mino」エディターでカスタム形状を作成
+   - 選択されたピースは「Selected Pieces」リストに表示
 
-- Built with Rust and compiled to WebAssembly
-- Uses dancing links algorithm for exact cover solving
-- Supports piece rotation and mirroring
-- Real-time visualization with CSS Grid
+3. **パズルの解決**:
 
-## Development
+   - 「Solve Puzzle」をクリックして解答を検索
+   - 解答は各ピースが異なる色で表示されるカラフルなグリッド
+   - セルにマウスオーバーでピース情報を表示
 
-To rebuild the WASM module:
-```bash
-wasm-pack build --target web --out-dir pkg
+4. **追加コントロール**:
+   - 「Clear Selection」で全ての選択されたピースを削除
+   - インタラクティブエディターでカスタムピースを作成
+
+## カスタムポリオミノエディター
+
+内蔵エディターでカスタムポリオミノ形状を作成できます:
+
+1. 「Add Custom Mino」をクリックしてエディターを開く
+2. グリッドサイズを選択 (3x3 から 6x6)
+3. セルをクリックしてオン/オフを切り替え
+4. ピースの名前を入力
+5. 「Save Mino」をクリックして選択肢に追加
+
+カスタムピースは自動的にバウンディングボックスにトリミングされ、接続・非接続どちらのパターンでも作成可能です。
+
+## 技術実装
+
+- **フロントエンド**: バニラ JavaScript、レスポンシブレイアウト用 CSS Grid
+- **バックエンド**: wasm-pack で WebAssembly にコンパイルされた Rust
+- **アルゴリズム**: 厳密被覆問題解決のための Dancing Links (Algorithm X)
+- **可視化**: 色分けピース表示による動的 CSS Grid
+
+## ファイル構造
+
 ```
+webapp/
+├── index.html          # メインアプリケーションページ
+├── main.js            # JavaScriptアプリケーションロジック
+├── style.css          # スタイリングとレイアウト
+├── debug.html         # デバッグ/開発用ページ
+├── pkg/              # WebAssemblyビルド出力
+│   ├── polyomino_tiling.js
+│   ├── polyomino_tiling_bg.wasm
+│   └── ...
+├── README.md         # 英語版READMEファイル
+└── README-ja.md      # このファイル (日本語版)
+```
+
+## 開発
+
+WebAssembly モジュールを再ビルドするには:
+
+```bash
+# プロジェクトルートから
+wasm-pack build --target web --out-dir webapp/pkg
+```
+
+Web アプリはページロード時に自動的に WASM モジュールを読み込み、ポリオミノソルバーを初期化します。
