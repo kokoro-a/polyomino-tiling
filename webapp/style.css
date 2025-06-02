@@ -578,6 +578,48 @@ h1 {
     background: transparent !important;
 }
 
+/* Custom polyomino delete button */
+.custom-mino-btn {
+    position: relative;
+}
+
+.delete-mino-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    padding: 0;
+    line-height: 1;
+}
+
+.delete-mino-btn:hover {
+    background: #c82333;
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
+}
+
+.custom-mino-btn:hover .delete-mino-btn {
+    opacity: 1;
+}
+
+.delete-mino-btn:focus {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+}
+
 @media (max-width: 768px) {
     .controls {
         grid-template-columns: 1fr;

@@ -511,7 +511,7 @@ class PolyominoApp {
         const buttonsContainer = document.getElementById('polyomino-buttons');
         
         const button = document.createElement('button');
-        button.className = 'polyomino-btn';
+        button.className = 'polyomino-btn custom-mino-btn';
         button.dataset.piece = fullName;
         
         // Get the custom polyomino matrix
@@ -524,12 +524,43 @@ class PolyominoApp {
         labelSpan.className = 'polyomino-label';
         labelSpan.textContent = displayName;
         
+        // Create delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-mino-btn';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.title = 'Delete this custom polyomino';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the main button click
+            this.deleteCustomMino(fullName);
+        });
+        
         button.appendChild(shapeDiv);
         button.appendChild(labelSpan);
+        button.appendChild(deleteBtn);
         
         button.addEventListener('click', () => this.togglePiece(fullName));
         
         buttonsContainer.appendChild(button);
+    }
+
+    deleteCustomMino(fullName) {        
+        // Remove from customPolyominoes array
+        this.customPolyominoes = this.customPolyominoes.filter(m => m.name !== fullName);
+        
+        // Remove from selected pieces if it was selected
+        const index = this.selectedPieces.indexOf(fullName);
+        if (index !== -1) {
+            this.selectedPieces.splice(index, 1);
+            this.updateSelectedList();
+        }
+        
+        // Remove the button from the DOM
+        const button = document.querySelector(`[data-piece="${fullName}"]`);
+        if (button) {
+            button.remove();
+        }
+        
+        this.updateStatus('Custom polyomino deleted successfully.', 'success');
     }
 
     // Auto dimension calculation methods
