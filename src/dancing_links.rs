@@ -1,6 +1,5 @@
 use core::panic;
 use log::{debug, info};
-use std::iter;
 
 pub struct DancingLinks {
     root: *mut ColumnNode,
@@ -185,21 +184,7 @@ impl DancingLinks {
         self.n_rows += 1;
     }
 
-    fn iterate_columns(&self) -> impl Iterator<Item = *mut ColumnNode> {
-        unsafe {
-            let mut current = (*self.root).right;
-            iter::from_fn(move || {
-                if current == self.root {
-                    None
-                } else {
-                    let column = current;
-                    current = (*current).right;
-                    Some(column)
-                }
-            })
-        }
-    }
-
+    #[allow(dead_code)]
     pub fn to_vecs(&self) -> Vec<Vec<usize>> {
         let mut matrix = vec![vec![0; self.n_cols]; self.n_rows];
 
@@ -311,30 +296,6 @@ impl ColumnNode {
         }
     }
 
-    fn iterate_nodes_in_column(&self) -> impl Iterator<Item = *mut Node> {
-        unsafe {
-            let head = (*self).head;
-            let mut current = head;
-            let mut first = true;
-            let mut count = 0;
-            iter::from_fn(move || {
-                count += 1;
-                if count > 10 {
-                    println!("iterate_nodes_in_column: infinite loop detected!");
-                    return None;
-                }
-                if current.is_null() || (!first && current == head) {
-                    None
-                } else {
-                    let node = current;
-                    current = (*current).down;
-                    first = false;
-                    Some(node)
-                }
-            })
-        }
-    }
-
     fn cover(&mut self) {
         unsafe {
             // 1. Unlink the column node from the neighboring columns
@@ -343,10 +304,7 @@ impl ColumnNode {
             // 2. For each node in this column
             let mut current = self.head;
             if !current.is_null() {
-                debug!(
-                    "head is not null, starting to cover column {}",
-                    self.index
-                );
+                debug!("head is not null, starting to cover column {}", self.index);
                 loop {
                     // 3. For each node in the same row as current
                     debug!("unlinking row {}", (*current).row_index);
@@ -506,15 +464,6 @@ impl Node {
         }
     }
 
-    fn unlink_horizontally(&mut self) {
-        unsafe {
-            let left = self.left;
-            let right = self.right;
-            (*left).right = right;
-            (*right).left = left;
-        }
-    }
-
     fn relink_vertically(&mut self) {
         unsafe {
             let up = self.up;
@@ -525,15 +474,6 @@ impl Node {
                 (*self.column).head = self;
             }
             (*self.column).size += 1;
-        }
-    }
-
-    fn relink_horizontally(&mut self) {
-        unsafe {
-            let left = self.left;
-            let right = self.right;
-            (*left).right = self;
-            (*right).left = self;
         }
     }
 

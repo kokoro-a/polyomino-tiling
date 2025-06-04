@@ -1,0 +1,13 @@
+{
+  "name": "polyomino-tiling-webapp",
+  "version": "1.0.0",
+  "description": "Web interface for polyomino tiling solver",
+  "scripts": {
+    "format": "prettier --write *.js *.css *.html",
+    "lint": "eslint *.js --fix"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  }
+}

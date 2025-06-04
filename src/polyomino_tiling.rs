@@ -61,16 +61,14 @@ impl PolyominoTiling {
             .collect();
         let piece_ids: Vec<usize> = rows
             .iter()
-            .map(|r| decode_one_hot(&r[..self.polyominoes.len()].to_vec()).unwrap())
+            .map(|r| decode_one_hot(&r[..self.polyominoes.len()]).unwrap())
             .collect();
         let placements: Vec<Vec<Vec<usize>>> = rows
             .iter()
             .map(|r| r[self.polyominoes.len()..].to_vec()) // flattened placements
             .map(|r| {
                 (0..(self.height))
-                    .map(|i| {
-                        r[(self.width * i)..(self.width * (i + 1))].to_vec()
-                    })
+                    .map(|i| r[(self.width * i)..(self.width * (i + 1))].to_vec())
                     .collect::<Vec<Vec<usize>>>()
             })
             .collect::<Vec<Vec<Vec<usize>>>>();
@@ -145,12 +143,7 @@ fn get_all_rotations_and_mirrors(matrix: &[Vec<usize>]) -> Vec<Vec<Vec<usize>>> 
     let rotation_1 = rotate(matrix);
     let rotation_2 = rotate(&rotation_1);
     let rotation_3 = rotate(&rotation_2);
-    let rotations_self = vec![
-        matrix.to_vec(),
-        rotation_1,
-        rotation_2,
-        rotation_3,
-    ];
+    let rotations_self = vec![matrix.to_vec(), rotation_1, rotation_2, rotation_3];
 
     let mirror_rotation_1 = rotate(&mirror);
     let mirror_rotation_2 = rotate(&mirror_rotation_1);
@@ -202,11 +195,7 @@ fn get_all_placements_without_rotation_nor_mirror(
     placements
 }
 
-fn get_all_placements(
-    matrix: &[Vec<usize>],
-    width: usize,
-    height: usize,
-) -> Vec<Vec<Vec<usize>>> {
+fn get_all_placements(matrix: &[Vec<usize>], width: usize, height: usize) -> Vec<Vec<Vec<usize>>> {
     let mut placements = vec![];
     let all_rotations_and_mirrors = get_all_rotations_and_mirrors(matrix);
     for m in all_rotations_and_mirrors {
