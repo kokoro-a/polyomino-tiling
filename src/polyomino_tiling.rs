@@ -433,4 +433,23 @@ mod tests {
         let tiling = PolyominoTiling::new(2, 2, polyominoes);
         assert!(tiling.is_board_size_eq_to_number_of_cells_of_polyominoes());
     }
+
+    #[test]
+    fn test_solve_polyomino_tiling_no_solution() {
+        _ = env_logger::builder().is_test(true).try_init();
+        let polyominos = vec![vec![
+            vec![1, 1, 1], //
+            vec![0, 1, 0], //
+            vec![0, 1, 0], //
+        ]];
+        let tiling = PolyominoTiling::new(1, 5, polyominos);
+        println!("Board: {}x{}", tiling.width, tiling.height);
+        println!("Polyomino dimensions: {}x{}", polyominos[0].len(), polyominos[0][0].len());
+        let solution = tiling.solve();
+        println!("Solution: {:?}", solution);
+        assert!(
+            solution.is_none(),
+            "Expected no solution for mismatched board size"
+        );
+    }
 }
