@@ -97,7 +97,12 @@ impl PolyominoTiling {
             return None;
         }
         let matrix = self.encode_into_exact_cover_problem_matrix();
-        let mut dlx = DancingLinks::from_vecs(&matrix);
+        debug!(
+            "problem reduced into exact cover problem matrix: {:?}",
+            matrix
+        );
+        let mut dlx =
+            DancingLinks::from_vecs(&matrix, self.width * self.height + self.polyominoes.len());
         let dlx_solution = dlx.solve();
         let solution = self.decode_dlx_solution(&matrix, &dlx_solution);
         solution
@@ -207,6 +212,16 @@ fn get_all_placements(
             &m, width, height,
         ));
     }
+    debug!(
+        "Found {} placements for piece with dimensions {}x{}",
+        placements.len(),
+        matrix.len(),
+        if matrix.is_empty() {
+            0
+        } else {
+            matrix[0].len()
+        }
+    );
     placements
 }
 
