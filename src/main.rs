@@ -1,7 +1,6 @@
 mod dancing_links;
 mod polyomino_tiling;
 mod pretty;
-use env_logger;
 use polyomino_tiling::{PolyominoTiling, piece_placements_to_matrix_of_piece_ids};
 use pretty::str_to_matrix;
 use std::collections::HashMap;
