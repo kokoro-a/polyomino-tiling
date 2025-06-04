@@ -39,7 +39,7 @@ fi
 echo "Formatting and linting JavaScript files..."
 cd webapp
 
-# Check if npm/node tools are available, if not use basic formatting
+# Check if npm/node tools are available, if not error out
 if command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
     # Install dependencies if node_modules doesn't exist
     if [ ! -d node_modules ]; then
@@ -51,12 +51,8 @@ if command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
     npm run format || echo "Prettier not available, skipping JS formatting"
     npm run lint || echo "ESLint not available, skipping JS linting"
 else
-    # Fallback: basic formatting with sed
-    echo "Using basic JavaScript formatting..."
-    find . -name "*.js" -not -path "*/pkg/*" -not -path "*/node_modules/*" -exec sh -c '
-        # Basic JS formatting - ensure consistent line endings and remove trailing whitespace
-        sed -i "s/[[:space:]]*$//" "$1"
-    ' _ {} \;
+    echo "Error: npm or node_modules not found. Skipping JavaScript formatting and linting." >&2
+    exit 1
 fi
 
 cd ..
