@@ -97,7 +97,12 @@ impl PolyominoTiling {
             return None;
         }
         let matrix = self.encode_into_exact_cover_problem_matrix();
-        let mut dlx = DancingLinks::from_vecs(&matrix);
+        debug!(
+            "problem reduced into exact cover problem matrix: {:?}",
+            matrix
+        );
+        let mut dlx =
+            DancingLinks::from_vecs(&matrix, self.width * self.height + self.polyominoes.len());
         let dlx_solution = dlx.solve();
         let solution = self.decode_dlx_solution(&matrix, &dlx_solution);
         solution
@@ -207,6 +212,16 @@ fn get_all_placements(
             &m, width, height,
         ));
     }
+    debug!(
+        "Found {} placements for piece with dimensions {}x{}",
+        placements.len(),
+        matrix.len(),
+        if matrix.is_empty() {
+            0
+        } else {
+            matrix[0].len()
+        }
+    );
     placements
 }
 
@@ -432,5 +447,21 @@ mod tests {
         ];
         let tiling = PolyominoTiling::new(2, 2, polyominoes);
         assert!(tiling.is_board_size_eq_to_number_of_cells_of_polyominoes());
+    }
+
+    #[test]
+    fn test_solve_polyomino_tiling_no_solution() {
+        _ = env_logger::builder().is_test(true).try_init();
+        let polyominos = vec![vec![
+            vec![1, 1, 1], //
+            vec![0, 1, 0], //
+            vec![0, 1, 0], //
+        ]];
+        let tiling = PolyominoTiling::new(1, 5, polyominos);
+        let solution = tiling.solve();
+        assert!(
+            solution.is_none(),
+            "Expected no solution for mismatched board size"
+        );
     }
 }

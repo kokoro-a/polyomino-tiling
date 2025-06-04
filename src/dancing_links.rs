@@ -25,15 +25,12 @@ impl DancingLinks {
         }
     }
 
-    pub fn from_vecs(matrix: &Vec<Vec<usize>>) -> Self {
-        if matrix.is_empty() {
-            return DancingLinks::new();
-        }
-
-        let n_cols = matrix[0].len();
-
+    pub fn from_vecs(matrix: &Vec<Vec<usize>>, n_cols: usize) -> Self {
         if matrix.iter().any(|row| row.len() != n_cols) {
-            panic!("All rows must have the same number of columns");
+            panic!(
+                "number of columns in each row must match. n_cols: {}",
+                n_cols
+            );
         }
 
         let mut dl = DancingLinks::new();
@@ -560,7 +557,7 @@ mod tests {
     #[test]
     fn test_dancing_links_simple() {
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 0], vec![0, 1]]);
+        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 0], vec![0, 1]], 2);
         assert_eq!(dlx.n_rows, 2);
         assert_eq!(dlx.n_cols, 2);
         assert_eq!(dlx.to_vecs(), vec![vec![1, 0], vec![0, 1]]);
@@ -570,14 +567,17 @@ mod tests {
     #[test]
     fn test_dancing_links_complex() {
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(&vec![
-            vec![1, 0, 0, 1, 0, 0, 1],
-            vec![1, 0, 0, 1, 0, 0, 0],
-            vec![0, 0, 0, 1, 1, 0, 1],
-            vec![0, 0, 1, 0, 1, 1, 0],
-            vec![0, 1, 0, 0, 0, 1, 1],
-            vec![0, 1, 0, 0, 0, 0, 1],
-        ]);
+        let mut dlx = DancingLinks::from_vecs(
+            &vec![
+                vec![1, 0, 0, 1, 0, 0, 1],
+                vec![1, 0, 0, 1, 0, 0, 0],
+                vec![0, 0, 0, 1, 1, 0, 1],
+                vec![0, 0, 1, 0, 1, 1, 0],
+                vec![0, 1, 0, 0, 0, 1, 1],
+                vec![0, 1, 0, 0, 0, 0, 1],
+            ],
+            7,
+        );
 
         assert_eq!(dlx.n_rows, 6);
         assert_eq!(dlx.n_cols, 7);
@@ -592,7 +592,7 @@ mod tests {
     #[test]
     fn test_dancing_links_no_solution() {
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 0], vec![1, 0]]);
+        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 0], vec![1, 0]], 2);
 
         assert_eq!(dlx.solve(), None);
     }
@@ -602,7 +602,7 @@ mod tests {
         // Matrix with single row covering all columns:
         // [1, 1, 1]  <- row 0
         let _ = env_logger::try_init();
-        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 1, 1]]);
+        let mut dlx = DancingLinks::from_vecs(&vec![vec![1, 1, 1]], 3);
 
         assert_eq!(dlx.solve(), Some(vec![0]));
     }
