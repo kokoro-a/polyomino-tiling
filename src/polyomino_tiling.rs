@@ -443,10 +443,7 @@ mod tests {
             vec![0, 1, 0], //
         ]];
         let tiling = PolyominoTiling::new(1, 5, polyominos);
-        println!("Board: {}x{}", tiling.width, tiling.height);
-        println!("Polyomino dimensions: {}x{}", polyominos[0].len(), polyominos[0][0].len());
         let solution = tiling.solve();
-        println!("Solution: {:?}", solution);
         assert!(
             solution.is_none(),
             "Expected no solution for mismatched board size"
