@@ -1,5 +1,5 @@
-use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
 
 mod dancing_links;
 mod polyomino_tiling;
@@ -34,7 +34,11 @@ pub struct PolyominoSolver {
 impl PolyominoSolver {
     #[wasm_bindgen(constructor)]
     pub fn new(width: usize, height: usize) -> PolyominoSolver {
-        console_log!("Creating new PolyominoSolver with dimensions {}x{}", width, height);
+        console_log!(
+            "Creating new PolyominoSolver with dimensions {}x{}",
+            width,
+            height
+        );
         PolyominoSolver {
             width,
             height,
@@ -55,13 +59,16 @@ impl PolyominoSolver {
         console_log!("Solving polyomino tiling problem...");
         let tiling = PolyominoTiling::new(self.width, self.height, self.polyominoes.clone());
         let solution = tiling.solve();
-        
+
         match solution {
             Some(sol) => {
                 console_log!("Found solution with {} pieces", sol.len());
                 let js_solution: Vec<PolyominoSolution> = sol
                     .into_iter()
-                    .map(|(piece_id, placement)| PolyominoSolution { piece_id, placement })
+                    .map(|(piece_id, placement)| PolyominoSolution {
+                        piece_id,
+                        placement,
+                    })
                     .collect();
                 Ok(serde_wasm_bindgen::to_value(&js_solution)?)
             }
@@ -77,14 +84,15 @@ impl PolyominoSolver {
         if solution_js.is_null() {
             return Ok(JsValue::NULL);
         }
-        
+
         let solution: Vec<PolyominoSolution> = serde_wasm_bindgen::from_value(solution_js)?;
         let piece_placements: Vec<(usize, Vec<Vec<usize>>)> = solution
             .into_iter()
             .map(|sol| (sol.piece_id, sol.placement))
             .collect();
-        
-        let matrix = piece_placements_to_matrix_of_piece_ids(&piece_placements, self.width, self.height);
+
+        let matrix =
+            piece_placements_to_matrix_of_piece_ids(&piece_placements, self.width, self.height);
         Ok(serde_wasm_bindgen::to_value(&matrix)?)
     }
 }
@@ -93,7 +101,7 @@ impl PolyominoSolver {
 #[wasm_bindgen]
 pub fn get_predefined_polyomino(name: &str) -> Result<JsValue, JsValue> {
     use pretty::str_to_matrix;
-    
+
     let polyomino = match name {
         "L" => str_to_matrix(vec!["###", "#..", "#.."]),
         "l" => str_to_matrix(vec!["####", "#..."]),
@@ -109,6 +117,6 @@ pub fn get_predefined_polyomino(name: &str) -> Result<JsValue, JsValue> {
         "b" => str_to_matrix(vec!["#.", "##", "##"]),
         _ => return Err(JsValue::from_str("Unknown polyomino name")),
     };
-    
+
     Ok(serde_wasm_bindgen::to_value(&polyomino)?)
 }
