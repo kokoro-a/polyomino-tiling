@@ -1,7 +1,6 @@
 mod dancing_links;
 mod polyomino_tiling;
 mod pretty;
-use env_logger;
 use polyomino_tiling::{PolyominoTiling, piece_placements_to_matrix_of_piece_ids};
 use pretty::str_to_matrix;
 use std::collections::HashMap;
@@ -36,8 +35,11 @@ fn main() {
     }
 }
 
+type Board = Vec<Vec<usize>>;
+type Solution = Option<Vec<(usize, Board)>>;
+
 fn make_solution_pretty(
-    solution: &Option<Vec<(usize, Vec<Vec<usize>>)>>,
+    solution: &Option<Vec<(usize, Board)>>,
     colors: HashMap<usize, (u8, u8, u8)>,
 ) -> String {
     if solution.is_none() {
@@ -76,7 +78,7 @@ fn color_str(text: &str, r: u8, g: u8, b: u8) -> String {
     format!("\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, text)
 }
 
-fn katamino(mino_names: Vec<&str>) -> Result<Option<Vec<(usize, Vec<Vec<usize>>)>>, ()> {
+fn katamino(mino_names: Vec<&str>) -> Result<Solution, ()> {
     let mino_dict = HashMap::from([
         (
             "L",

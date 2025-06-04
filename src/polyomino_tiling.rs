@@ -24,7 +24,7 @@ impl PolyominoTiling {
             .clone()
             .into_iter()
             .enumerate()
-            .map(|(piece_id, polyomino)| {
+            .flat_map(|(piece_id, polyomino)| {
                 let placements = get_all_placements(&polyomino, self.width, self.height);
                 let placements_flattened: Vec<Vec<usize>> = placements
                     .iter()
@@ -41,7 +41,6 @@ impl PolyominoTiling {
                     .collect();
                 placements_with_piece_id
             })
-            .flatten()
             .collect();
 
         exact_cover_problem_matrix
@@ -49,7 +48,7 @@ impl PolyominoTiling {
 
     fn decode_dlx_solution(
         &self,
-        matrix: &Vec<Vec<usize>>,
+        matrix: &[Vec<usize>],
         dlx_solution: &Option<Vec<usize>>,
     ) -> Option<Vec<(usize, Vec<Vec<usize>>)>> {
         if (dlx_solution).is_none() {
@@ -62,24 +61,21 @@ impl PolyominoTiling {
             .collect();
         let piece_ids: Vec<usize> = rows
             .iter()
-            .map(|r| decode_one_hot(&r[..self.polyominoes.len()].to_vec()).unwrap())
+            .map(|r| decode_one_hot(&r[..self.polyominoes.len()]).unwrap())
             .collect();
         let placements: Vec<Vec<Vec<usize>>> = rows
             .iter()
             .map(|r| r[self.polyominoes.len()..].to_vec()) // flattened placements
             .map(|r| {
                 (0..(self.height))
-                    .map(|i| {
-                        let _r = r[(self.width * i)..(self.width * (i + 1))].to_vec();
-                        _r
-                    })
+                    .map(|i| r[(self.width * i)..(self.width * (i + 1))].to_vec())
                     .collect::<Vec<Vec<usize>>>()
             })
             .collect::<Vec<Vec<Vec<usize>>>>();
 
         let solution: Vec<(usize, Vec<Vec<usize>>)> =
-            piece_ids.into_iter().zip(placements.into_iter()).collect();
-        return Some(solution);
+            piece_ids.into_iter().zip(placements).collect();
+        Some(solution)
     }
 
     pub fn solve(&self) -> Option<Vec<(usize, Vec<Vec<usize>>)>> {
@@ -104,8 +100,7 @@ impl PolyominoTiling {
         let mut dlx =
             DancingLinks::from_vecs(&matrix, self.width * self.height + self.polyominoes.len());
         let dlx_solution = dlx.solve();
-        let solution = self.decode_dlx_solution(&matrix, &dlx_solution);
-        solution
+        self.decode_dlx_solution(&matrix, &dlx_solution)
     }
 
     fn is_board_size_eq_to_number_of_cells_of_polyominoes(&self) -> bool {
@@ -122,41 +117,42 @@ impl PolyominoTiling {
     }
 }
 
-fn rotate(matrix: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+fn rotate(matrix: &[Vec<usize>]) -> Vec<Vec<usize>> {
     let n_col = matrix.len();
     let n_row = if n_col > 0 { matrix[0].len() } else { 0 };
     let mut rotated_matrix = vec![vec![0; n_col]; n_row];
 
-    for i in 0..n_col {
-        for j in 0..n_row {
+    for (i, _) in matrix.iter().enumerate().take(n_col) {
+        for (j, _) in (0..n_row).enumerate() {
             rotated_matrix[j][n_col - 1 - i] = matrix[i][j];
         }
     }
     rotated_matrix
 }
 
-fn mirror(matrix: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+fn mirror(matrix: &[Vec<usize>]) -> Vec<Vec<usize>> {
     matrix
         .iter()
         .map(|row| row.iter().rev().cloned().collect())
         .collect()
 }
 
-fn get_all_rotations_and_mirrors(matrix: &Vec<Vec<usize>>) -> Vec<Vec<Vec<usize>>> {
+fn get_all_rotations_and_mirrors(matrix: &[Vec<usize>]) -> Vec<Vec<Vec<usize>>> {
     let mirror = mirror(matrix);
 
-    let rotations_self = vec![
-        matrix.clone(),
-        rotate(matrix),
-        rotate(&rotate(matrix)),
-        rotate(&rotate(&rotate(matrix))),
-    ];
+    let rotation_1 = rotate(matrix);
+    let rotation_2 = rotate(&rotation_1);
+    let rotation_3 = rotate(&rotation_2);
+    let rotations_self = vec![matrix.to_vec(), rotation_1, rotation_2, rotation_3];
 
+    let mirror_rotation_1 = rotate(&mirror);
+    let mirror_rotation_2 = rotate(&mirror_rotation_1);
+    let mirror_rotation_3 = rotate(&mirror_rotation_2);
     let rotations_mirror = vec![
-        mirror.clone(),
-        rotate(&mirror),
-        rotate(&rotate(&mirror)),
-        rotate(&rotate(&rotate(&mirror))),
+        mirror,
+        mirror_rotation_1,
+        mirror_rotation_2,
+        mirror_rotation_3,
     ];
 
     let mut all = vec![];
@@ -166,7 +162,7 @@ fn get_all_rotations_and_mirrors(matrix: &Vec<Vec<usize>>) -> Vec<Vec<Vec<usize>
 }
 
 fn get_all_placements_without_rotation_nor_mirror(
-    matrix: &Vec<Vec<usize>>,
+    matrix: &[Vec<usize>],
     width: usize,
     height: usize,
 ) -> Vec<Vec<Vec<usize>>> {
@@ -177,7 +173,6 @@ fn get_all_placements_without_rotation_nor_mirror(
     let piece_width = matrix[0].len();
 
     let mut placements = vec![];
-    let matrix = matrix;
 
     if height < piece_height || width < piece_width {
         info!(
@@ -200,11 +195,7 @@ fn get_all_placements_without_rotation_nor_mirror(
     placements
 }
 
-fn get_all_placements(
-    matrix: &Vec<Vec<usize>>,
-    width: usize,
-    height: usize,
-) -> Vec<Vec<Vec<usize>>> {
+fn get_all_placements(matrix: &[Vec<usize>], width: usize, height: usize) -> Vec<Vec<Vec<usize>>> {
     let mut placements = vec![];
     let all_rotations_and_mirrors = get_all_rotations_and_mirrors(matrix);
     for m in all_rotations_and_mirrors {
@@ -225,7 +216,7 @@ fn get_all_placements(
     placements
 }
 
-fn flatten(matrix: &Vec<Vec<usize>>) -> Vec<usize> {
+fn flatten(matrix: &[Vec<usize>]) -> Vec<usize> {
     matrix.iter().flat_map(|row| row.iter()).cloned().collect()
 }
 
@@ -239,7 +230,7 @@ fn encode_one_hot(len: usize, index: usize) -> Vec<usize> {
     vec
 }
 
-fn decode_one_hot(encoded: &Vec<usize>) -> Option<usize> {
+fn decode_one_hot(encoded: &[usize]) -> Option<usize> {
     encoded
         .iter()
         .enumerate()
@@ -248,7 +239,7 @@ fn decode_one_hot(encoded: &Vec<usize>) -> Option<usize> {
 }
 
 pub fn piece_placements_to_matrix_of_piece_ids(
-    piece_placements: &Vec<(usize, Vec<Vec<usize>>)>,
+    piece_placements: &[(usize, Vec<Vec<usize>>)],
     width: usize,
     height: usize,
 ) -> Vec<Vec<Option<usize>>> {

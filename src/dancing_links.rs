@@ -1,6 +1,5 @@
 use core::panic;
-use log::{debug, error, info, trace, warn};
-use std::iter;
+use log::{debug, info};
 
 pub struct DancingLinks {
     root: *mut ColumnNode,
@@ -149,8 +148,8 @@ impl DancingLinks {
         }
     }
 
-    pub fn append_row(&mut self, row: &Vec<usize>) {
-        if row.len() != self.n_cols as usize {
+    pub fn append_row(&mut self, row: &[usize]) {
+        if row.len() != self.n_cols {
             panic!("Row length does not match number of columns");
         }
 
@@ -168,7 +167,7 @@ impl DancingLinks {
             .collect::<Vec<_>>();
 
         // Link the nodes in the row
-        if row_nodes.len() > 0 {
+        if !row_nodes.is_empty() {
             let first_node = row_nodes[0];
             unsafe {
                 (*first_node).left = first_node;
@@ -185,21 +184,7 @@ impl DancingLinks {
         self.n_rows += 1;
     }
 
-    fn iterate_columns(&self) -> impl Iterator<Item = *mut ColumnNode> {
-        unsafe {
-            let mut current = (*self.root).right;
-            iter::from_fn(move || {
-                if current == self.root {
-                    None
-                } else {
-                    let column = current;
-                    current = (*current).right;
-                    Some(column)
-                }
-            })
-        }
-    }
-
+    #[allow(dead_code)]
     pub fn to_vecs(&self) -> Vec<Vec<usize>> {
         let mut matrix = vec![vec![0; self.n_cols]; self.n_rows];
 
@@ -286,11 +271,11 @@ impl ColumnNode {
             if new_column.is_null() {
                 panic!("New column is null");
             }
-            let old_right = (*self).right;
+            let old_right = self.right;
             if old_right.is_null() {
                 panic!("Right column is null");
             }
-            (*self).right = new_column;
+            self.right = new_column;
             (*new_column).left = self;
             (*new_column).right = old_right;
             (*old_right).left = new_column;
@@ -299,39 +284,15 @@ impl ColumnNode {
 
     fn append_node(&mut self, new_node: *mut Node) {
         unsafe {
-            if (*self).head.is_null() {
-                (*self).head = new_node;
+            if self.head.is_null() {
+                self.head = new_node;
                 (*new_node).up = new_node;
                 (*new_node).down = new_node;
             } else {
-                let head = (*self).head;
+                let head = self.head;
                 (*head).insert_up(new_node);
             }
-            (*self).size += 1;
-        }
-    }
-
-    fn iterate_nodes_in_column(&self) -> impl Iterator<Item = *mut Node> {
-        unsafe {
-            let head = (*self).head;
-            let mut current = head;
-            let mut first = true;
-            let mut count = 0;
-            iter::from_fn(move || {
-                count += 1;
-                if count > 10 {
-                    println!("iterate_nodes_in_column: infinite loop detected!");
-                    return None;
-                }
-                if current.is_null() || (!first && current == head) {
-                    None
-                } else {
-                    let node = current;
-                    current = (*current).down;
-                    first = false;
-                    Some(node)
-                }
-            })
+            self.size += 1;
         }
     }
 
@@ -341,12 +302,9 @@ impl ColumnNode {
             self.unlink();
 
             // 2. For each node in this column
-            let mut current = (*self).head;
+            let mut current = self.head;
             if !current.is_null() {
-                debug!(
-                    "head is not null, starting to cover column {}",
-                    (*self).index
-                );
+                debug!("head is not null, starting to cover column {}", self.index);
                 loop {
                     // 3. For each node in the same row as current
                     debug!("unlinking row {}", (*current).row_index);
@@ -360,14 +318,14 @@ impl ColumnNode {
                     }
                     debug!("completed unlinking row {}", (*current).row_index);
                     current = (*current).down;
-                    if current == (*self).head {
+                    if current == self.head {
                         break;
                     }
                     debug!("next row to unlink: {}", (*current).row_index);
                 }
-                debug!("finished covering column {}", (*self).index);
+                debug!("finished covering column {}", self.index);
             } else {
-                debug!("head is null, nothing to cover in column {}", (*self).index);
+                debug!("head is null, nothing to cover in column {}", self.index);
             }
         }
     }
@@ -375,7 +333,7 @@ impl ColumnNode {
     fn uncover(&mut self) {
         unsafe {
             // Do everything in reverse order of cover
-            let mut current = (*self).head;
+            let mut current = self.head;
             if !current.is_null() {
                 // Go backwards through the column
                 current = (*current).up;
@@ -387,7 +345,7 @@ impl ColumnNode {
                         (*row_node).relink_vertically();
                         row_node = (*row_node).left;
                     }
-                    if current == (*self).head {
+                    if current == self.head {
                         break;
                     }
                     current = (*current).up;
@@ -401,8 +359,8 @@ impl ColumnNode {
 
     fn unlink(&mut self) {
         unsafe {
-            let left = (*self).left;
-            let right = (*self).right;
+            let left = self.left;
+            let right = self.right;
             (*left).right = right;
             (*right).left = left;
         }
@@ -410,8 +368,8 @@ impl ColumnNode {
 
     fn relink(&mut self) {
         unsafe {
-            let left = (*self).left;
-            let right = (*self).right;
+            let left = self.left;
+            let right = self.right;
             (*right).left = self;
             (*left).right = self;
         }
@@ -443,11 +401,11 @@ impl Node {
             if new_node.is_null() {
                 panic!("New node is null");
             }
-            let old_down = (*self).down;
+            let old_down = self.down;
             if old_down.is_null() {
                 panic!("Down node is null");
             }
-            (*self).down = new_node;
+            self.down = new_node;
             (*new_node).up = self;
             (*new_node).down = old_down;
             (*old_down).up = new_node;
@@ -459,11 +417,11 @@ impl Node {
             if new_node.is_null() {
                 panic!("New node is null");
             }
-            let old_right = (*self).right;
+            let old_right = self.right;
             if old_right.is_null() {
                 panic!("Right node is null");
             }
-            (*self).right = new_node;
+            self.right = new_node;
             (*new_node).left = self;
             (*new_node).right = old_right;
             (*old_right).left = new_node;
@@ -484,9 +442,9 @@ impl Node {
 
     fn unlink_vertically(&mut self) {
         unsafe {
-            let up = (*self).up;
-            let down = (*self).down;
-            let column = (*self).column;
+            let up = self.up;
+            let down = self.down;
+            let column = self.column;
             (*up).down = down;
             (*down).up = up;
 
@@ -506,34 +464,16 @@ impl Node {
         }
     }
 
-    fn unlink_horizontally(&mut self) {
-        unsafe {
-            let left = (*self).left;
-            let right = (*self).right;
-            (*left).right = right;
-            (*right).left = left;
-        }
-    }
-
     fn relink_vertically(&mut self) {
         unsafe {
-            let up = (*self).up;
-            let down = (*self).down;
+            let up = self.up;
+            let down = self.down;
             (*up).down = self;
             (*down).up = self;
-            if (*(*self).column).head.is_null() {
-                (*(*self).column).head = self;
+            if (*self.column).head.is_null() {
+                (*self.column).head = self;
             }
-            (*(*self).column).size += 1;
-        }
-    }
-
-    fn relink_horizontally(&mut self) {
-        unsafe {
-            let left = (*self).left;
-            let right = (*self).right;
-            (*left).right = self;
-            (*right).left = self;
+            (*self.column).size += 1;
         }
     }
 

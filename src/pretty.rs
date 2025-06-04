@@ -21,7 +21,8 @@ pub fn str_to_matrix(s: Vec<&str>) -> Vec<Vec<usize>> {
         .collect::<Vec<Vec<usize>>>()
 }
 
-pub fn matrix_to_str(matrix: &Vec<Vec<usize>>) -> Vec<String> {
+#[allow(dead_code)]
+pub fn matrix_to_str(matrix: &[Vec<usize>]) -> Vec<String> {
     /*
     ## Example
 

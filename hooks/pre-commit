@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# To set up this pre-commit hook, symlink .git/hooks/pre-commit to this file:
+# cp -r .git/hooks .git/hooks.bkp
+# rm .git/hooks/pre-commit
+# ln -s hooks/pre-commit .git/hooks/pre-commit
+# chmod +x hooks/pre-commit
+
+set -e
+
+echo "Running pre-commit hooks..."
+
+# Format Rust code
+echo "Formatting Rust code..."
+cargo fmt --all
+
+# Run clippy for Rust linting
+echo "Running clippy..."
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Build WebAssembly package
+echo "Building WebAssembly package..."
+wasm-pack build --target web --out-dir pkg
+
+# Copy WASM package to webapp directory
+echo "Copying WASM package to webapp..."
+cp -r pkg/* webapp/pkg/
+
+# Check if there are any changes to add back to staging
+if ! git diff --quiet --cached; then
+    echo "Adding formatted files to staging area..."
+    # Add any Rust files that may have been formatted
+    git add -A src/
+    # Add WASM build artifacts
+    git add pkg/ webapp/pkg/
+fi
+
+# Format and lint JavaScript files in webapp
+echo "Formatting and linting JavaScript files..."
+cd webapp
+
+# Check if npm/node tools are available, if not error out
+if command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d node_modules ]; then
+        echo "Installing JavaScript dependencies..."
+        npm install
+    fi
+    
+    # Run prettier and eslint
+    npm run format || echo "Prettier not available, skipping JS formatting"
+    npm run lint || echo "ESLint not available, skipping JS linting"
+else
+    echo "Error: npm or node_modules not found. Skipping JavaScript formatting and linting." >&2
+    exit 1
+fi
+
+cd ..
+
+# Add any formatted JS files back to staging
+git add webapp/*.js webapp/*.css webapp/*.html webapp/package.json webapp/.prettierrc webapp/.eslintrc.json
+
+echo "Pre-commit hooks completed successfully!"
